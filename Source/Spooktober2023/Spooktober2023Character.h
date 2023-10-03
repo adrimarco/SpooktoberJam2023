@@ -40,6 +40,12 @@ class ASpooktober2023Character : public ACharacter
 	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+
+	class UAIPerceptionStimuliSourceComponent* stimulusSource;
+
+	void setupStimulusSource();
+
 	
 public:
 	ASpooktober2023Character();

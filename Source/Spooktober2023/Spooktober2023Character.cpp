@@ -10,11 +10,24 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Engine/LocalPlayer.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
 //////////////////////////////////////////////////////////////////////////
 // ASpooktober2023Character
+
+void ASpooktober2023Character::setupStimulusSource()
+{
+	stimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+
+	if (stimulusSource) {
+		stimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		stimulusSource->RegisterWithPerceptionSystem();
+	}
+
+}
 
 ASpooktober2023Character::ASpooktober2023Character()
 {
@@ -38,6 +51,8 @@ ASpooktober2023Character::ASpooktober2023Character()
 	Mesh1P->CastShadow = false;
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
+
+	setupStimulusSource();
 
 }
 
