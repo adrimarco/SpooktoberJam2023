@@ -48,7 +48,9 @@ APlayerCharacter::APlayerCharacter()
 
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
-	lampMesh->SetupAttachment(camera);
+	lampMesh->SetupAttachment(GetCapsuleComponent());
+	lampMesh->SetRelativeLocation(FVector(26.f, -18.f, 30.f));
+	lampMesh->SetRelativeRotation(FRotator(0.f, 70.f, 0.f));
 
 	// Lamp light
 	lampLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("Lamp Point Light"));
@@ -75,6 +77,11 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	// Limit camera pitch
+	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
+	cameraManager->ViewPitchMin = -35.f;
+	cameraManager->ViewPitchMax = 40.f;
 
 	// Timeline binding functions
 	FOnTimelineFloat fcallback;
