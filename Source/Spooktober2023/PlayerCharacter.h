@@ -9,6 +9,8 @@
 
 class UStaticMeshComponent;
 class UCameraComponent;
+class UTimelineComponent;
+class UPointLightComponent;
 class UInputMappingContext;
 class UInputAction;
 
@@ -23,6 +25,12 @@ public:
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	UFUNCTION(BlueprintCallable)
+	void LightLamp(const FInputActionValue& Value);
+	UFUNCTION(BlueprintCallable)
+	void SetLightIntensityFactor(float intensityFactor);
+	UFUNCTION()
+	void ApplyCameraShake();
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,14 +44,23 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool lightOn{ true };
+	bool lightOn{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float lightIntensity{ 2000.f };
 
 	// Components
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UStaticMeshComponent* lampMesh{ nullptr };
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	UCameraComponent* camera{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPointLightComponent* lampLight{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UTimelineComponent* TL_TurnLighOn{ nullptr };
 
 	// Input
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -54,4 +71,21 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	UInputAction* LookAction{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UInputAction* LightAction{ nullptr };
+
+	// Timeline curve
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UCurveFloat* LightIntensityCurve{ nullptr };
+
+	// Camera shake
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UCameraShakeBase> StaticShake{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UCameraShakeBase> MovementShake{ nullptr };
+
+	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
+	constexpr UCameraComponent*		GetCamera()		const { return camera; }
 };
