@@ -8,6 +8,9 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
+#include "Perception/AISense_Sight.h"
+
 
 #define LIGHT_INTENSITY				5000.f
 #define LIGHT_ATTENUATION_RADIUS	2000.f
@@ -146,5 +149,17 @@ void APlayerCharacter::ApplyCameraShake() {
 	}
 	else {
 		if (MovementShake) playerController->ClientStartCameraShake(MovementShake);
+	}
+}
+
+
+
+void APlayerCharacter::setupStimulusSource()
+{
+	stimulusSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("Stimulus"));
+
+	if (stimulusSource) {
+		stimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
+		stimulusSource->RegisterWithPerceptionSystem();
 	}
 }

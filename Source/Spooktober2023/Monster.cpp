@@ -40,3 +40,8 @@ UBehaviorTree* AMonster::GetBehaviorTree() const noexcept
 	return bTree;
 }
 
+int AMonster::MeleeAttack_Implementation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("Putaso"));
+	return 0;
+}

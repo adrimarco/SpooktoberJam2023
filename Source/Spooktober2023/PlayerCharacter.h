@@ -13,11 +13,16 @@ class UTimelineComponent;
 class UPointLightComponent;
 class UInputMappingContext;
 class UInputAction;
+class UAIPerceptionStimuliSourceComponent;
+
 
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
 {
 	GENERATED_BODY()
+
+	UAIPerceptionStimuliSourceComponent* stimulusSource;
+	void setupStimulusSource();
 
 public:
 	// Sets default values for this character's properties

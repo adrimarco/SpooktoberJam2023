@@ -5,12 +5,13 @@
 #include "CoreMinimal.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "GameFramework/Character.h"
+#include "Combat_Interface.h"
 #include "Monster.generated.h"
 
 class UStaticMeshComponent;
 
 UCLASS()
-class SPOOKTOBER2023_API AMonster : public ACharacter
+class SPOOKTOBER2023_API AMonster : public ACharacter, public ICombat_Interface
 {
 	GENERATED_BODY()
 
@@ -29,6 +30,7 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	UBehaviorTree* GetBehaviorTree() const noexcept;
 
+	int MeleeAttack_Implementation() override;
 
 
 protected:
@@ -37,5 +39,4 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI", meta=(AllowPrivateAccess="true"))
 	UBehaviorTree* bTree;
-
 };

@@ -3,7 +3,7 @@
 
 #include "Monster_AIController.h"
 #include "Monster.h"
-#include "Spooktober2023Character.h"
+#include "PlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
 
 //Includes for ai perception
@@ -51,7 +51,7 @@ void AMonster_AIController::setupPerceptionSystem()
 
 void AMonster_AIController::OnTargetDetected(AActor* actor, FAIStimulus const stimulus)
 {
-	if (ASpooktober2023Character* const ch = Cast<ASpooktober2023Character>(actor)) {
+	if (APlayerCharacter* const ch = Cast<APlayerCharacter>(actor)) {
 		GetBlackboardComponent()->SetValueAsBool("CanSeePlayer", stimulus.WasSuccessfullySensed());
 	}
 
