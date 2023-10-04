@@ -60,7 +60,6 @@ APlayerCharacter::APlayerCharacter()
 	lampLight->SetupAttachment(lampMesh);
 	lampLight->SetAttenuationRadius(LIGHT_ATTENUATION_RADIUS);
 	lightIntensity = LIGHT_INTENSITY;
-	lampLight->SetIntensity(lightOn ? lightIntensity : 0.f);
 	lampLight->SetLightColor(FLinearColor(1.f, 0.173f, 0.f));
 
 	// Turn light on/off timeline
@@ -80,6 +79,9 @@ void APlayerCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	// Initial light state
+	lampLight->SetIntensity(lightOn ? lightIntensity : 0.f);
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
