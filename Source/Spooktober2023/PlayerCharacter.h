@@ -14,6 +14,7 @@ class UPointLightComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAIPerceptionStimuliSourceComponent;
+class ACoffin;
 
 
 UCLASS()
@@ -32,6 +33,9 @@ public:
 	void Look(const FInputActionValue& Value);
 	void StartSprint(const FInputActionValue& Value);
 	void StopSprint(const FInputActionValue& Value);
+	void Interact(const FInputActionValue& Value);
+	void StopInteract(const FInputActionValue& Value);
+	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
 	UFUNCTION(BlueprintCallable)
 	void LightLamp(const FInputActionValue& Value);
@@ -39,6 +43,10 @@ public:
 	void SetLightIntensityFactor(float intensityFactor);
 	UFUNCTION(BlueprintCallable)
 	void ApplyCameraShake();
+	UFUNCTION(BlueprintCallable)
+	void SetMoney(int m);
+	UFUNCTION(BlueprintCallable)
+	void AddMoney(int m);
 
 protected:
 	// Called when the game starts or when spawned
@@ -66,6 +74,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
 	bool exhausted{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
+	int money{ 0 };
+
+	AActor* interactingWith{ nullptr };
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
@@ -95,6 +108,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* RunAction{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* InteractAction{ nullptr };
 
 	// Timeline curve
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")

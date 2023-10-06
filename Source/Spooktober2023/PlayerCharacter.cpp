@@ -11,7 +11,7 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
-
+#include "Coffin.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -21,6 +21,7 @@ constexpr auto MIN_RUN_STAMINA			= 5.f;
 constexpr auto STAMINA_RECOVER_RATE		= 0.8f;
 constexpr auto WALK_SPEED				= 400.f;
 constexpr auto RUN_SPEED				= 800.f;
+constexpr auto INTERACTION_DISTANCE		= 300.f;
 
 
 // Sets default values
@@ -52,8 +53,8 @@ APlayerCharacter::APlayerCharacter()
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
 	lampMesh->SetupAttachment(GetCapsuleComponent());
-	lampMesh->SetRelativeLocation(FVector(26.f, -18.f, 30.f));
-	lampMesh->SetRelativeRotation(FRotator(0.f, 70.f, 0.f));
+	lampMesh->SetRelativeLocation(FVector(23.8f, -18.f, 30.f));
+	lampMesh->SetRelativeRotation(FRotator(-3.5f, 70.f, -9.7f));
 
 	// Lamp light
 	lampLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("Lamp Point Light"));
@@ -61,6 +62,7 @@ APlayerCharacter::APlayerCharacter()
 	lampLight->SetAttenuationRadius(LIGHT_ATTENUATION_RADIUS);
 	lightIntensity = LIGHT_INTENSITY;
 	lampLight->SetLightColor(FLinearColor(1.f, 0.173f, 0.f));
+	lampLight->SetRelativeLocation(FVector(0.f, -1.17f, 10.f));
 
 	// Turn light on/off timeline
 	TL_TurnLighOn = CreateDefaultSubobject<UTimelineComponent>(TEXT("Turn Light On"));
@@ -85,7 +87,7 @@ void APlayerCharacter::BeginPlay()
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
-	cameraManager->ViewPitchMin = -35.f;
+	cameraManager->ViewPitchMin = -45.f;
 	cameraManager->ViewPitchMax = 40.f;
 
 	// Timeline binding functions
@@ -125,6 +127,12 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		if (RunAction) {
 			EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &APlayerCharacter::StartSprint);
 			EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopSprint);
+		}
+
+		// Interact
+		if (InteractAction) {
+			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
+			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopInteract);
 		}
 	}
 
@@ -179,6 +187,7 @@ void APlayerCharacter::ApplyCameraShake() {
 	}
 }
 
+
 void APlayerCharacter::StartSprint(const FInputActionValue& Value = {}) {
 	if (exhausted || running) return;
 
@@ -219,4 +228,45 @@ void APlayerCharacter::setupStimulusSource()
 		stimulusSource->RegisterForSense(TSubclassOf<UAISense_Sight>());
 		stimulusSource->RegisterWithPerceptionSystem();
 	}
+}
+
+void APlayerCharacter::Interact(const FInputActionValue& Value) {
+	// Raycast to get actor in sight
+	FVector from	{ camera->GetComponentLocation() };
+	FVector to		{ from + camera->GetComponentRotation().Vector() * INTERACTION_DISTANCE };
+
+	FHitResult raycastResult;
+
+	if (GetWorld()->LineTraceSingleByChannel(raycastResult, from, to, ECC_Visibility)) {
+		AActor* hitActor = raycastResult.GetActor();
+
+		// Check if hit actor is a coffin
+		if (hitActor->IsA<ACoffin>()) {
+			ACoffin* coffinActor{ Cast<ACoffin>(hitActor) };
+
+			coffinActor->OpenCoffin(this);
+
+			interactingWith = hitActor;
+		}
+	}
+	else {
+		interactingWith = nullptr;
+	}
+}
+
+void APlayerCharacter::StopInteract(const FInputActionValue& Value) {
+	if (interactingWith == nullptr) return;
+
+
+
+	interactingWith = nullptr;
+}
+
+void APlayerCharacter::SetMoney(int m = 0){
+	money = m;
+}
+
+
+void APlayerCharacter::AddMoney(int m) {
+	money += m;
 }
