@@ -7,7 +7,6 @@
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveVector.h"
 #include "Components/BoxComponent.h"
-#include "/Engine/Plugins/Experimental/Text3D/Source/Text3D/Public/Text3DComponent.h"
 
 
 constexpr auto COFFIN_INIT_Z	= -56.f;
