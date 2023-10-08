@@ -6,9 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "GraveGround.generated.h"
 
-class UTimelineComponent;
-class UCurveVector;
-
 UCLASS()
 class SPOOKTOBER2023_API AGraveGround : public AActor
 {
@@ -34,14 +31,4 @@ public:
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	TArray<UStaticMeshComponent*> groundMeshes{ nullptr };
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UTimelineComponent* TL_Dig{ nullptr };
-
-	// Timeline curves
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
-	UCurveVector* GroundLocationCurve{ nullptr };
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
-	UCurveFloat* GroundScaleCurve{ nullptr };
 };

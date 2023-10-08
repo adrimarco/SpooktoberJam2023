@@ -46,12 +46,13 @@ void ACoffin::BeginPlay()
 	
 	SetJewelsCollection(jewels);
 	opened = false;
-	SetCanBeOpened(true);
+	SetCanBeOpened(false);
 
 	// Timeline binding functions
 	FOnTimelineFloat fcallback;
 	fcallback.BindUFunction(this, FName{ TEXT("SetCoffinDoorRotation") });
 	TL_Open->AddInterpFloat(DoorOpenCurve, fcallback);
+
 	tombValue = rand() % 10;
 
 	UpdateMeshes();
@@ -88,7 +89,8 @@ void ACoffin::SetTombValue(int value) {
 void ACoffin::SetCanBeOpened(bool value) {
 	canBeOpened = value;
 
-	SetActorEnableCollision(value);
+	if (canBeOpened)	Tags.AddUnique("Interactable");
+	else				Tags.Remove("Interactable");
 }
 
 void ACoffin::OpenCoffin(APlayerCharacter* player) {
@@ -101,6 +103,7 @@ void ACoffin::OpenCoffin(APlayerCharacter* player) {
 			player->AddMoney(tombValue);
 		tombValue = 0;
 		jewelMesh->SetVisibility(false);
+		Tags.Remove("Interactable");
 	}
 }
 

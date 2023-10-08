@@ -78,6 +78,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
 	int money{ 0 };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FVector interactionDirection{};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool blockMovement{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool blockCamera{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool slowCamera{ false };
+
 	AActor* interactingWith{ nullptr };
 
 	// Components

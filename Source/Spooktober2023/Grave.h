@@ -7,6 +7,11 @@
 #include "Grave.generated.h"
 
 class AGraveGround;
+class ACoffin;
+class UTimelineComponent;
+class UCurveFloat;
+class UCurveVector;
+class UBoxComponent;
 
 UCLASS()
 class SPOOKTOBER2023_API AGrave : public AActor
@@ -16,6 +21,18 @@ class SPOOKTOBER2023_API AGrave : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AGrave();
+
+	UFUNCTION(BlueprintCallable)
+	void SetCoffinHeight(float height);
+
+	UFUNCTION(BlueprintCallable)
+	void StartDigging();
+
+	UFUNCTION(BlueprintCallable)
+	void StopDigging();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishDigging();
 
 protected:
 	// Called when the game starts or when spawned
@@ -47,7 +64,27 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UChildActorComponent* graveGroundActor{ nullptr };
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTimelineComponent* TL_Dig{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UBoxComponent* boxCollision{ nullptr };
+	
+	// Timeline curves
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveVector* GroundLocationCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveFloat* GroundScaleCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveFloat* CoffinPositionCurve{ nullptr };
+	
+	// Blueprint classes for child actors
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components Blueprint")
 	TSubclassOf<AGraveGround> groundBP{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components Blueprint")
+	TSubclassOf<ACoffin> coffinBP{ nullptr };
 };

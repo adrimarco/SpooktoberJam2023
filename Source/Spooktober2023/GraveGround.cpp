@@ -2,8 +2,6 @@
 
 
 #include "GraveGround.h"
-#include "Curves/CurveVector.h"
-#include "Components/TimelineComponent.h"
 
 constexpr auto NUM_GROUND_MESHES = 10;
 
@@ -24,28 +22,13 @@ AGraveGround::AGraveGround()
 		groundMeshes[i]->SetupAttachment(root);
 	}
 	SetGroundLocation(FVector(45.f, 45.f, 0.f));
-
-	// Dig timeline
-	TL_Dig = CreateDefaultSubobject<UTimelineComponent>(TEXT("Dig Animation"));
-	TL_Dig->SetTimelineLength(15.f);
-	
+	SetActorEnableCollision(true);
 }
 
 // Called when the game starts or when spawned
 void AGraveGround::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// Timeline binding functions
-	FOnTimelineFloat fcallback;
-	fcallback.BindUFunction(this, FName{ TEXT("SetGroundScale") });
-	TL_Dig->AddInterpFloat(GroundScaleCurve, fcallback);
-
-	FOnTimelineVector vcallback;
-	vcallback.BindUFunction(this, FName{ TEXT("SetGroundLocation") });
-	TL_Dig->AddInterpVector(GroundLocationCurve, vcallback);
-
-	TL_Dig->Play();
 }
 
 // Called every frame

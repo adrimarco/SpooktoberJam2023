@@ -12,6 +12,7 @@
 #include "Perception/AISense_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Coffin.h"
+#include "Grave.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -22,6 +23,8 @@ constexpr auto STAMINA_RECOVER_RATE		= 0.8f;
 constexpr auto WALK_SPEED				= 400.f;
 constexpr auto RUN_SPEED				= 800.f;
 constexpr auto INTERACTION_DISTANCE		= 300.f;
+constexpr auto INTERACTING_CAMERA_SLOW	= 0.15f;
+constexpr auto INTERACTING_CAM_MOV_LIMIT= 0.4f;
 
 
 // Sets default values
@@ -29,8 +32,6 @@ APlayerCharacter::APlayerCharacter()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
-	stamina = MAX_STAMINA;
 
 	// Capsule
 	GetCapsuleComponent()->InitCapsuleSize(40.f, 90.f);
@@ -94,6 +95,9 @@ void APlayerCharacter::BeginPlay()
 	FOnTimelineFloat fcallback;
 	fcallback.BindUFunction(this, FName{ TEXT("SetLightIntensityFactor") });
 	TL_TurnLighOn->AddInterpFloat(LightIntensityCurve, fcallback);
+
+	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
+	stamina = MAX_STAMINA;
 }
 
 // Called every frame
@@ -142,23 +146,35 @@ void APlayerCharacter::Move(const FInputActionValue& Value) {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// add movement 
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-		AddMovementInput(GetActorRightVector(), MovementVector.X);
-	}
+	// Check player has a controller
+	if (Controller == nullptr) return;
+	// Check player can move
+	if (blockMovement) return;
+
+	// Add movement 
+	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	AddMovementInput(GetActorRightVector(), MovementVector.X);
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value) {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
+	// Check player has a controller
+	if (Controller == nullptr) return;
+	// Reduces camera speed
+	if (slowCamera) LookAxisVector *= INTERACTING_CAMERA_SLOW;
+
+	// Add yaw and pitch input to controller
+	AddControllerYawInput(LookAxisVector.X);
+	AddControllerPitchInput(LookAxisVector.Y);
+
+	if (interactingWith != nullptr) {
+		FVector newRotation = camera->GetForwardVector();
+		
+		if (FVector::DotProduct(interactionDirection, newRotation) < INTERACTING_CAM_MOV_LIMIT) {
+			StopInteract({});
+		}
 	}
 }
 
@@ -201,7 +217,7 @@ void APlayerCharacter::StopSprint(const FInputActionValue& Value = {}) {
 }
 
 void APlayerCharacter::UpdateStamina(float time) {
-	if (running) {
+	if (running && not GetCharacterMovement()->Velocity.IsZero()) {
 		// Loose stamina
 		stamina -= time;
 
@@ -236,17 +252,33 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 	FVector to		{ from + camera->GetComponentRotation().Vector() * INTERACTION_DISTANCE };
 
 	FHitResult raycastResult;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
 
-	if (GetWorld()->LineTraceSingleByChannel(raycastResult, from, to, ECC_Visibility)) {
+	if (GetWorld()->LineTraceSingleByChannel(raycastResult, from, to, ECC_PhysicsBody, params)) {
 		AActor* hitActor = raycastResult.GetActor();
+		if (hitActor->IsChildActor() && not hitActor->ActorHasTag("Interactable")) hitActor = hitActor->GetParentActor();
 
-		// Check if hit actor is a coffin
-		if (hitActor->IsA<ACoffin>()) {
-			ACoffin* coffinActor{ Cast<ACoffin>(hitActor) };
+		if (hitActor->ActorHasTag("Interactable") && not raycastResult.GetComponent()->ComponentHasTag("BlockInteraction")) {
+			// Check if hit actor is a coffin
+			if (hitActor->IsA<ACoffin>()) {
+				ACoffin* coffinActor{ Cast<ACoffin>(hitActor) };
 
-			coffinActor->OpenCoffin(this);
+				coffinActor->OpenCoffin(this);
+				interactingWith = hitActor;
+			}
+			// Check if hit actor is a grave
+			else if (hitActor->IsA<AGrave>()) {
+				AGrave* graveActor{ Cast<AGrave>(hitActor) };
 
-			interactingWith = hitActor;
+				graveActor->StartDigging();
+				slowCamera = true;
+				blockMovement = true;
+
+				interactingWith = hitActor;
+			}
+
+			interactionDirection = camera->GetForwardVector();
 		}
 	}
 	else {
@@ -254,12 +286,18 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 	}
 }
 
-void APlayerCharacter::StopInteract(const FInputActionValue& Value) {
+void APlayerCharacter::StopInteract(const FInputActionValue& Value = {}) {
 	if (interactingWith == nullptr) return;
 
+	if (interactingWith->IsA<AGrave>()) {
+		AGrave* graveActor{ Cast<AGrave>(interactingWith) };
 
+		graveActor->StopDigging();
+	}
 
 	interactingWith = nullptr;
+	slowCamera = false;
+	blockMovement = false;
 }
 
 void APlayerCharacter::SetMoney(int m = 0){

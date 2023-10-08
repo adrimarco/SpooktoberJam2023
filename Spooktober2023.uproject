@@ -29,6 +29,10 @@
 			"SupportedTargetPlatforms": [
 				"Win64"
 			]
+		},
+		{
+			"Name": "Text3D",
+			"Enabled": true
 		}
 	]
 }
