@@ -7,6 +7,7 @@
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveVector.h"
 #include "Components/BoxComponent.h"
+#include "Text3DComponent.h"
 
 
 constexpr auto COFFIN_INIT_Z	= -56.f;
@@ -44,6 +45,38 @@ AGrave::AGrave()
 	boxCollision->SetupAttachment(GetRootComponent());
 	boxCollision->SetBoxExtent(FVector(70.f, 150.f, 12.f));
 	boxCollision->SetRelativeLocation(FVector(0.f, 166.4f, 0.f));
+	boxCollision->SetCollisionResponseToAllChannels(ECR_Block);
+	boxCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+
+	// 3D text
+	deadNameText = CreateDefaultSubobject<UText3DComponent>(TEXT("Dead Name 3DText"));
+	deadNameText->SetupAttachment(graveMesh);
+	deadNameText->SetRelativeLocation(FVector(0.f, 6.376f, 55.65f));
+	deadNameText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	deadNameText->SetText(FText::FromString("Marco\nRobles"));
+	deadNameText->SetExtrude(10.f);
+	deadNameText->SetHorizontalAlignment(EText3DHorizontalTextAlignment::Center);
+	deadNameText->SetVerticalAlignment(EText3DVerticalTextAlignment::Center);
+	deadNameText->SetHasMaxWidth(true);
+	deadNameText->SetHasMaxHeight(true);
+	deadNameText->SetMaxWidth(300.f);
+	deadNameText->SetMaxHeight(20.f);
+}
+
+void AGrave::OnConstruction(const FTransform& Transform) {
+	// Set grave name material
+	if (deadNameMaterial != nullptr) {
+		deadNameText->SetFrontMaterial(deadNameMaterial);
+		deadNameText->SetBackMaterial(deadNameMaterial);
+		deadNameText->SetBevelMaterial(deadNameMaterial);
+		deadNameText->SetExtrudeMaterial(deadNameMaterial);
+	}
+
+	// Create child actors
+	if (groundBP == nullptr || coffinBP == nullptr) return;
+
+	graveGroundActor->SetChildActorClass(groundBP);
+	coffinActor->SetChildActorClass(coffinBP);
 }
 
 // Called when the game starts or when spawned
@@ -55,9 +88,6 @@ void AGrave::BeginPlay()
 		Destroy();
 		return;
 	}
-
-	graveGroundActor->SetChildActorClass(groundBP);
-	coffinActor->SetChildActorClass(coffinBP);
 	
 	// Timeline binding functions
 	FOnTimelineFloat fcallback;
@@ -110,4 +140,9 @@ void AGrave::FinishDigging() {
 		Cast<ACoffin>(coffinActor->GetChildActor())->SetCanBeOpened(true);
 		Tags.Remove("Interactable");
 	}
+}
+
+void AGrave::SetDeadName(const FName& name) {
+	deadName = name;
+	deadNameText->SetText(FText::FromName(name));
 }

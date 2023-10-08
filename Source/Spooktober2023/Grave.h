@@ -12,6 +12,7 @@ class UTimelineComponent;
 class UCurveFloat;
 class UCurveVector;
 class UBoxComponent;
+class UText3DComponent;
 
 UCLASS()
 class SPOOKTOBER2023_API AGrave : public AActor
@@ -34,9 +35,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishDigging();
 
+	UFUNCTION(BlueprintCallable)
+	void SetDeadName(const FName& name);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 public:	
 	// Called every frame
@@ -68,9 +74,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_Dig{ nullptr };
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UBoxComponent* boxCollision{ nullptr };
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UText3DComponent* deadNameText{ nullptr };
+
 	// Timeline curves
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveVector* GroundLocationCurve{ nullptr };
@@ -87,4 +96,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components Blueprint")
 	TSubclassOf<ACoffin> coffinBP{ nullptr };
+
+	// Grave properties
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
+	UMaterial* deadNameMaterial{ nullptr };
 };
