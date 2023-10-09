@@ -7,13 +7,6 @@
 #include "InputActionValue.h"
 #include "PlayerCharacter.generated.h"
 
-#define CAT_COMPONENTS	"Components"
-#define CAT_INPUTS		"Input"
-#define CAT_CAMERA		"Camera"
-#define CAT_TIMELINE	"Timeline"
-#define CAT_LAMP		"Lamp"
-#define CAT_SPRINT		"Sprint"
-
 class UStaticMeshComponent;
 class UCameraComponent;
 class UTimelineComponent;
@@ -21,6 +14,7 @@ class UPointLightComponent;
 class UInputMappingContext;
 class UInputAction;
 class UAIPerceptionStimuliSourceComponent;
+class ACoffin;
 
 
 UCLASS()
@@ -39,6 +33,9 @@ public:
 	void Look(const FInputActionValue& Value);
 	void StartSprint(const FInputActionValue& Value);
 	void StopSprint(const FInputActionValue& Value);
+	void Interact(const FInputActionValue& Value);
+	void StopInteract(const FInputActionValue& Value);
+	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
 	UFUNCTION(BlueprintCallable)
 	void LightLamp(const FInputActionValue& Value);
@@ -46,6 +43,10 @@ public:
 	void SetLightIntensityFactor(float intensityFactor);
 	UFUNCTION(BlueprintCallable)
 	void ApplyCameraShake();
+	UFUNCTION(BlueprintCallable)
+	void SetMoney(int m);
+	UFUNCTION(BlueprintCallable)
+	void AddMoney(int m);
 
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
@@ -62,59 +63,79 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Class variables
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= CAT_LAMP)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Lamp")
 	bool lightOn{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CAT_LAMP)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
 	float lightIntensity{ 2000.f };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CAT_SPRINT)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
 	float stamina{ 0.f };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CAT_SPRINT)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
 	bool running{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CAT_SPRINT)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
 	bool exhausted{ false };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
+	int money{ 0 };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	FVector interactionDirection{};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool blockMovement{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool blockCamera{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	bool slowCamera{ false };
+
+	AActor* interactingWith{ nullptr };
+
 	// Components
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=CAT_COMPONENTS)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	UStaticMeshComponent* lampMesh{ nullptr };
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = CAT_COMPONENTS)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UCameraComponent* camera{ nullptr };
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = CAT_COMPONENTS)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UPointLightComponent* lampLight{ nullptr };
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = CAT_COMPONENTS)
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_TurnLighOn{ nullptr };
 
 	// Input
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_INPUTS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputMappingContext* DefaultMappingContext{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_INPUTS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* MoveAction{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_INPUTS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LookAction{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_INPUTS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* LightAction{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_INPUTS)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* RunAction{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* InteractAction{ nullptr };
+
 	// Timeline curve
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_TIMELINE)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* LightIntensityCurve{ nullptr };
 
 	// Camera shake
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_CAMERA)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> StaticShake{ nullptr };
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = CAT_CAMERA)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> MovementShake{ nullptr };
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }

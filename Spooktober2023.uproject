@@ -42,6 +42,11 @@
 			"Name": "SplineCraftLite",
 			"Enabled": true,
 			"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/35ee9bcc327a4d098ea759cd279631bd"
+			
+		},
+		{
+			"Name": "Text3D",
+			"Enabled": true
 		}
 	]
 }
