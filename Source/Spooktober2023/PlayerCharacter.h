@@ -53,6 +53,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ClosePaper();
 
+	UFUNCTION(BlueprintCallable)
+	bool getLampState() const noexcept;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
