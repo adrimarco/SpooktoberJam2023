@@ -11,8 +11,11 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Blueprint/UserWidget.h"
+// Interaction actors
 #include "Coffin.h"
 #include "Grave.h"
+#include "Paper.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -138,6 +141,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &APlayerCharacter::Interact);
 			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Completed, this, &APlayerCharacter::StopInteract);
 		}
+
+		// Back
+		if (BackAction) 
+			EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ClosePaper);
 	}
 
 }
@@ -146,10 +153,8 @@ void APlayerCharacter::Move(const FInputActionValue& Value) {
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
-	// Check player has a controller
-	if (Controller == nullptr) return;
-	// Check player can move
-	if (blockMovement) return;
+	// Check player has a controller or movement is disabled
+	if (Controller == nullptr || blockMovement) return;
 
 	// Add movement 
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
@@ -160,8 +165,9 @@ void APlayerCharacter::Look(const FInputActionValue& Value) {
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
 
-	// Check player has a controller
-	if (Controller == nullptr) return;
+	// Check player has a controller or camera movement is disabled
+	if (Controller == nullptr || blockCamera) return;
+
 	// Reduces camera speed
 	if (slowCamera) LookAxisVector *= INTERACTING_CAMERA_SLOW;
 
@@ -277,6 +283,19 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 
 				interactingWith = hitActor;
 			}
+			// Check if hit actor is a paper
+			else if (hitActor->IsA<APaper>()) {
+				APaper* paperActor{ Cast<APaper>(hitActor) };
+
+				auto index = collectedPapers.Add({ paperActor->message, paperActor->title });
+
+				// Show paper
+				OnPaperCollected.Broadcast(collectedPapers[index].message);
+				blockCamera = true;
+				blockMovement = true;
+
+				interactingWith = hitActor;
+			}
 
 			interactionDirection = camera->GetForwardVector();
 		}
@@ -293,11 +312,16 @@ void APlayerCharacter::StopInteract(const FInputActionValue& Value = {}) {
 		AGrave* graveActor{ Cast<AGrave>(interactingWith) };
 
 		graveActor->StopDigging();
+		slowCamera = false;
+		blockMovement = false;
+	}
+	else if (interactingWith->IsA<APaper>()) {
+		APaper* paperActor{ Cast<APaper>(interactingWith) };
+
+		paperActor->Destroy();
 	}
 
 	interactingWith = nullptr;
-	slowCamera = false;
-	blockMovement = false;
 }
 
 void APlayerCharacter::SetMoney(int m = 0){
@@ -307,4 +331,15 @@ void APlayerCharacter::SetMoney(int m = 0){
 
 void APlayerCharacter::AddMoney(int m) {
 	money += m;
+}
+
+void APlayerCharacter::ClosePaper() {
+	if (paperWidget != nullptr) {
+		paperWidget->RemoveFromParent();
+
+		blockCamera = false;
+		blockMovement = false;
+
+		paperWidget = nullptr;
+	}
 }

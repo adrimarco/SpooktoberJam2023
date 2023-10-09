@@ -18,6 +18,7 @@ public class Spooktober2023 : ModuleRules
 			"AIModule",
 			"GameplayTasks",
 			"NavigationSystem",
+			"UMG",
 			"Text3D"
 		});
 	}
