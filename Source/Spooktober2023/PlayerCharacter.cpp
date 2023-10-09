@@ -177,6 +177,11 @@ void APlayerCharacter::ApplyCameraShake() {
 	}
 }
 
+bool APlayerCharacter::getLampState() const noexcept
+{
+	return lightOn;
+}
+
 void APlayerCharacter::StartSprint(const FInputActionValue& Value = {}) {
 	if (exhausted || running) return;
 

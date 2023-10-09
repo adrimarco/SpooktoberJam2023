@@ -47,6 +47,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ApplyCameraShake();
 
+	UFUNCTION(BlueprintCallable)
+	bool getLampState() const noexcept;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
