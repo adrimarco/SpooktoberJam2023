@@ -5,7 +5,10 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include <Perception/AIPerceptionTypes.h>
+#include "PlayerCharacter.h"
 #include "Monster_AIController.generated.h"
+
+
 
 /**
  * 
@@ -17,9 +20,10 @@ class SPOOKTOBER2023_API AMonster_AIController : public AAIController
 	
 public:
 	explicit AMonster_AIController(FObjectInitializer const& objInit);
+	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Search", meta = (AllowPrivateAccess = "true"))
-	float sight_radius = 500.f;
+	float sight_radius = 2000.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Search", meta = (AllowPrivateAccess = "true"))
 	float increment_lose_sight_radius = 100.f;
@@ -35,11 +39,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Search", meta = (AllowPrivateAccess = "true"))
 	float max_age = 7.f;
 
+	bool trackPlayer = false;
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
 private:
 	class UAISenseConfig_Sight* sightConfig;
+	bool lampState = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer", meta = (AllowPrivateAccess = "true"))
+	float TIME_RANGE_SEARCH_PLAYER = 1.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Timer", meta = (AllowPrivateAccess = "true"))
+	int MAX_TIMER_LAMP = 5;
+
+	float timerRandom = 0.f;
+	int timerLamp = MAX_TIMER_LAMP;
 
 	void setupPerceptionSystem();
 

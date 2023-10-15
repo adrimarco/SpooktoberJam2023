@@ -18,7 +18,7 @@ class SPOOKTOBER2023_API AMonster : public ACharacter, public ICombat_Interface
 public:
 	//Class Variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
-	UStaticMeshComponent* meshComp = nullptr;
+	UStaticMeshComponent* meshComp{nullptr};
 
 	// Sets default values for this character's properties
 	AMonster();
@@ -38,5 +38,5 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI", meta=(AllowPrivateAccess="true"))
-	UBehaviorTree* bTree;
+	UBehaviorTree* bTree{};
 };

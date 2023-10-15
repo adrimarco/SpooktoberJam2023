@@ -15,7 +15,7 @@ class SPOOKTOBER2023_API UBTService_IsPlayerInMeleeRange : public UBTService_Bla
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))
-	float meleeRange = 2.5f;
+	float meleeRange = 200.f;
 
 	
 public:

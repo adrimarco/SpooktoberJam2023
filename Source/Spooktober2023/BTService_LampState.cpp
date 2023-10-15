@@ -26,9 +26,11 @@ void UBTService_LampState::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, u
 	//get player
 	ACharacter const* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 	APlayerCharacter const* p = Cast<APlayerCharacter>(player);
+	UE_LOG(LogTemp, Warning, TEXT("AAAAAAAAAAAAAAAAAAAA"));
 	if (p != nullptr) {
 		//check lamp state and set it in to the bt
-		OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), p->getLampState());
+		UE_LOG(LogTemp, Warning, TEXT("Lamp: %d"), p->lightOn);
+		OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), p->lightOn);
 	}
 	
 }

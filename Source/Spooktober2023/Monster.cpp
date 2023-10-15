@@ -4,6 +4,8 @@
 #include "Monster.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
+#include "Monster_AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
 
 
 // Sets default values
@@ -43,5 +45,12 @@ UBehaviorTree* AMonster::GetBehaviorTree() const noexcept
 int AMonster::MeleeAttack_Implementation()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Putaso"));
+
+	//Check player collision
+
+	AAIController* aiCont = Cast<AAIController>(GetController());
+	aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+	UE_LOG(LogTemp, Warning, TEXT("Putaso    aaaaaaa"));
+
 	return 0;
 }

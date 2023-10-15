@@ -5,14 +5,49 @@
 #include "Monster.h"
 #include "PlayerCharacter.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "Math/UnrealMathUtility.h"
 
 //Includes for ai perception
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include <Kismet/GameplayStatics.h>
 
 AMonster_AIController::AMonster_AIController(FObjectInitializer const& objInit)
 {
 	setupPerceptionSystem();
+}
+
+void AMonster_AIController::Tick(float DeltaTime)
+{
+	if (ACharacter* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
+		APlayerCharacter const* p = Cast<APlayerCharacter>(player);
+		lampState = p->getLampState();
+		GetBlackboardComponent()->SetValueAsBool("LampState", lampState);
+
+		if (!lampState && !trackPlayer) {
+			if (timerRandom >= TIME_RANGE_SEARCH_PLAYER) {
+				int rand = FMath::RandRange(0, timerLamp);
+				//UE_LOG(LogTemp, Warning, TEXT("Rad: %d"), rand);
+
+				GetBlackboardComponent()->SetValueAsBool("TrackPlayer", rand == 0);
+				trackPlayer = (rand == 0);
+				timerRandom -= TIME_RANGE_SEARCH_PLAYER;
+				if(timerLamp > 0)
+					timerLamp--;
+			}
+			else {
+				timerRandom += DeltaTime;
+			}
+
+			//UE_LOG(LogTemp, Warning, TEXT("Timer: %f"), timerRandom);
+		}
+		else {
+			if (timerRandom > 0)
+				timerRandom -= DeltaTime;
+			if(timerLamp < MAX_TIMER_LAMP)
+				timerLamp++;
+		}
+	}
 }
 
 void AMonster_AIController::OnPossess(APawn* InPawn)
@@ -53,6 +88,7 @@ void AMonster_AIController::OnTargetDetected(AActor* actor, FAIStimulus const st
 {
 	if (APlayerCharacter* const ch = Cast<APlayerCharacter>(actor)) {
 		GetBlackboardComponent()->SetValueAsBool("CanSeePlayer", stimulus.WasSuccessfullySensed());
+		GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
 	}
 
 }
