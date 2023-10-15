@@ -15,7 +15,10 @@ class UInputMappingContext;
 class UInputAction;
 class UAIPerceptionStimuliSourceComponent;
 class ACoffin;
+class UUserWidget;
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPaperCollectedDelegate, FText, paperText);
 
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
@@ -47,6 +50,8 @@ public:
 	void SetMoney(int m);
 	UFUNCTION(BlueprintCallable)
 	void AddMoney(int m);
+	UFUNCTION(BlueprintCallable)
+	void ClosePaper();
 
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
@@ -54,6 +59,11 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	struct PaperMessage {
+		FText message;
+		FName title;
+	};
 
 public:	
 	// Called every frame
@@ -93,6 +103,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	bool slowCamera{ false };
 
+	TArray<PaperMessage> collectedPapers;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UUserWidget* paperWidget{ nullptr };
+
 	AActor* interactingWith{ nullptr };
 
 	// Components
@@ -127,6 +142,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* InteractAction{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* BackAction{ nullptr };
+
 	// Timeline curve
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* LightIntensityCurve{ nullptr };
@@ -137,6 +155,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> MovementShake{ nullptr };
+
+	// Event dispatcher
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FPaperCollectedDelegate OnPaperCollected;
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
 	constexpr UPointLightComponent* GetPointLight()	const { return lampLight; }
