@@ -84,6 +84,8 @@ void ACoffin::SetOutcomeValue(bool negative) {
 
 void ACoffin::SetTombValue(int value) {
 	tombValue = FMath::Max(value, 0);
+
+	UpdateMeshes();
 }
 
 void ACoffin::SetCanBeOpened(bool value) {

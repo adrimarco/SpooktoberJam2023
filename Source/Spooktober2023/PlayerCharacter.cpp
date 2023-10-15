@@ -51,6 +51,8 @@ APlayerCharacter::APlayerCharacter()
 	postProcessSettings.bOverride_MotionBlurMax = true;
 	postProcessSettings.MotionBlurAmount = 0.2;
 	postProcessSettings.MotionBlurMax = 20;
+	postProcessSettings.bOverride_BloomMethod = true;
+	postProcessSettings.BloomMethod = EBloomMethod::BM_SOG;
 
 	camera->PostProcessSettings = postProcessSettings;
 
