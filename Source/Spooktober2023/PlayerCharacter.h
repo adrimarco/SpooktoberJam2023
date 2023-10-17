@@ -17,6 +17,11 @@ class UAIPerceptionStimuliSourceComponent;
 class ACoffin;
 class UUserWidget;
 
+struct PaperMessage {
+	FText message;
+	FName title;
+};
+
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPaperCollectedDelegate, FText, paperText);
 
@@ -40,6 +45,8 @@ public:
 	void StopInteract(const FInputActionValue& Value);
 	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
+	int32 AddPaperOrdered(const PaperMessage& paper);
+
 	UFUNCTION(BlueprintCallable)
 	void LightLamp(const FInputActionValue& Value);
 	UFUNCTION(BlueprintCallable)
@@ -56,14 +63,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
 
+	UFUNCTION(BlueprintCallable)
+	TArray<FName> getCollectedPapersTitles() const;
+
+	UFUNCTION(BlueprintCallable)
+	FText getPaperText(const FName& title) const;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	struct PaperMessage {
-		FText message;
-		FName title;
-	};
 
 public:	
 	// Called every frame
@@ -94,20 +102,28 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	FVector interactionDirection{};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool blockInput{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool blockMovement{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool blockCamera{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool slowCamera{ false };
 
-	TArray<PaperMessage> collectedPapers;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	bool uiWidgetActive{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	UUserWidget* paperWidget{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UUserWidget* inventoryWidget{ nullptr };
+
+	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };
 
 	// Components

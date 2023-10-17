@@ -9,6 +9,9 @@
 class UTimelineComponent;
 class APlayerCharacter;
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBadCoffinOppened, AActor*, coffinActor);
+
 UCLASS()
 class SPOOKTOBER2023_API ACoffin : public AActor
 {
@@ -77,6 +80,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
 	TArray<UStaticMesh*> jewels{ nullptr };
+
+	// Event dispatchers
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FBadCoffinOppened OnBadCoffinOppened;
 
 	inline static TArray<UStaticMesh*> jewelsCollection{};
 };

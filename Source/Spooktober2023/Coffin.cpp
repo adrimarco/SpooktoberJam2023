@@ -99,6 +99,9 @@ void ACoffin::OpenCoffin(APlayerCharacter* player) {
 	if (not opened && canBeOpened) {
 		TL_Open->Play();
 		opened = true;
+
+		// If its has a negative outcome, broadcast delegate
+		if (negativeOutcome) OnBadCoffinOppened.Broadcast(this);
 	}
 	else if (opened && tombValue > 0) {
 		if (player != nullptr)
