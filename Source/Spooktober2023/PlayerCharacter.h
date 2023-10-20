@@ -69,6 +69,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FText getPaperText(const FName& title) const;
 
+	UFUNCTION(BlueprintCallable)
+	void SetMausoleumNumber(int size);
+
+	UFUNCTION(BlueprintCallable)
+	void EmblemCollected(int id);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<int> GetCollectedEmblems();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -125,6 +134,7 @@ public:
 
 	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };
+	TArray<int> collectedEmblems;
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")

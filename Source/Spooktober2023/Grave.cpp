@@ -103,6 +103,7 @@ void AGrave::BeginPlay()
 	TL_Dig->AddInterpFloat(CoffinPositionCurve, fcallback);
 
 	TL_Dig->SetNewTime(0.f);
+	TL_Dig->SetPlayRate(10.f);
 
 	// Bind timeline finish function
 	FOnTimelineEventStatic func;

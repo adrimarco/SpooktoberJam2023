@@ -16,6 +16,7 @@
 #include "Coffin.h"
 #include "Grave.h"
 #include "Paper.h"
+#include "MausoleumDoor.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -200,7 +201,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value) {
 	}
 }
 
-void APlayerCharacter::LightLamp(const FInputActionValue& Value) {
+void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 	if (blockInput) return;
 
 	lightOn = not lightOn;
@@ -329,6 +330,13 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 
 				interactingWith = hitActor;
 			}
+			else if (hitActor->IsA<AMausoleumDoor>()) {
+				AMausoleumDoor* doorActor{ Cast<AMausoleumDoor>(hitActor) };
+
+				doorActor->InteractDoor(raycastResult.GetComponent());
+
+				interactingWith = hitActor;
+			}
 
 			interactionDirection = camera->GetForwardVector();
 		}
@@ -395,4 +403,22 @@ FText APlayerCharacter::getPaperText(const FName& title) const {
 	}
 
 	return FText();
+}
+
+void APlayerCharacter::SetMausoleumNumber(int size) {
+	collectedEmblems.SetNum(FMath::Max(size, 0));
+
+	for (int i{ 0 }; i < collectedEmblems.Num(); ++i) {
+		collectedEmblems[i] = 0;
+	}
+}
+
+void APlayerCharacter::EmblemCollected(int id) {
+	if (collectedEmblems.IsValidIndex(id)) {
+		collectedEmblems[id]++;
+	}
+}
+
+TArray<int> APlayerCharacter::GetCollectedEmblems() {
+	return collectedEmblems;
 }

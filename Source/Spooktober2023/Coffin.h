@@ -12,6 +12,9 @@ class APlayerCharacter;
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBadCoffinOppened, AActor*, coffinActor);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEmblemCollected, int, emblemId);
+
 UCLASS()
 class SPOOKTOBER2023_API ACoffin : public AActor
 {
@@ -25,6 +28,9 @@ public:
 	static void SetJewelsCollection(const TArray<UStaticMesh*>& col);
 
 	UFUNCTION(BlueprintCallable)
+	static void SetEmblemMaterialCollection(const TArray<UMaterialInstance*>& col);
+
+	UFUNCTION(BlueprintCallable)
 	static void ClearJewelsCollection();
 
 	UFUNCTION(BlueprintCallable)
@@ -32,6 +38,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetTombValue(int value);
+
+	UFUNCTION(BlueprintCallable)
+	void SetKeyId(int id);
 
 	UFUNCTION(BlueprintCallable)
 	void SetCanBeOpened(bool value);
@@ -45,6 +54,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UpdateMeshes();
 
+	UFUNCTION(BlueprintCallable)
+	static UMaterialInstance* GetEmblemMaterialByIndex(int index);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -55,9 +67,13 @@ public:
 
 	// Class variables
 	int tombValue{ 0 };
+	int keyId{ -1 };
 	bool negativeOutcome{ false };
 	bool canBeOpened{ false };
 	bool opened{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Value")
+	bool richCoffin{ false };
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
@@ -81,9 +97,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
 	TArray<UStaticMesh*> jewels{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
+	UStaticMesh* emblemMesh{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
+	TArray<UMaterialInstance*> emblemsMaterial{ nullptr };
+
 	// Event dispatchers
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FBadCoffinOppened OnBadCoffinOppened;
 
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FEmblemCollected OnEmblemCollected;
+
 	inline static TArray<UStaticMesh*> jewelsCollection{};
+	inline static TArray<UMaterialInstance*> emblemMaterialsCollection{};
 };
