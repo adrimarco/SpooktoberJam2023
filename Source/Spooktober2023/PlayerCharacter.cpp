@@ -16,6 +16,7 @@
 #include "Coffin.h"
 #include "Grave.h"
 #include "Paper.h"
+#include "MausoleumDoor.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -28,6 +29,13 @@ constexpr auto RUN_SPEED				= 800.f;
 constexpr auto INTERACTION_DISTANCE		= 300.f;
 constexpr auto INTERACTING_CAMERA_SLOW	= 0.15f;
 constexpr auto INTERACTING_CAM_MOV_LIMIT= 0.4f;
+TArray<PaperMessage> initialPapers = {	{FText::FromString("So, are you determined to go to the cemetery? Is that the only thing you can think of? I don't intend to judge you; everyone does what they can to move forward. I'll just offer you a piece of advice. Meddling in the affairs of the dead can be dangerous. Disturbing troubled, malevolent, or unhappy souls comes with its risks. You should think carefully about whom you're looting, although it's impossible to do so without knowing who they were. I wish you the best of luck; you're going to need it."), 
+										"Rest in peace?"},
+										{FText::FromString("I don't know what reasons you have for venturing into the forest of the dead on the night before All Saints' Day, but I don't believe it's a sensible idea. I must warn you in case you're not aware of what you're about to do. They say that on October 31st, in the dead of night, the sky turns red, the souls of the departed wander our world once again, and their secrets come to light. I suppose you may not believe in such nonsense, but I'd carry a lantern. Some claim it can protect you from the spirits, although others insist just the opposite."),
+										"The Red Night"}, 
+										{FText::FromString("We've been quite patient, haven't we? This is your last chance. You have one week to gather all the money and hand it over to us. We don't care how you do it, even if you have to steal from all the elderly people in the city. If we haven't seen the money by November 1st, you'd better prepare for the worst."),
+										"Final warning"}, 
+};
 
 
 // Sets default values
@@ -103,6 +111,13 @@ void APlayerCharacter::BeginPlay()
 
 	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
 	stamina = MAX_STAMINA;
+	uiWidgetActive = false;
+
+	// Initial papers
+	collectedPapers.Empty();
+	for (auto i{ 0 }; i < initialPapers.Num(); ++i) {
+		AddPaperOrdered(initialPapers[i]);
+	}
 }
 
 // Called every frame
@@ -152,11 +167,11 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 }
 
 void APlayerCharacter::Move(const FInputActionValue& Value) {
+	// Check player has a controller or movement is disabled
+	if (Controller == nullptr || blockInput || blockMovement) return;
+
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
-
-	// Check player has a controller or movement is disabled
-	if (Controller == nullptr || blockMovement) return;
 
 	// Add movement 
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
@@ -164,11 +179,11 @@ void APlayerCharacter::Move(const FInputActionValue& Value) {
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value) {
+	// Check player has a controller or camera movement is disabled
+	if (Controller == nullptr || blockInput || blockCamera) return;
+
 	// input is a Vector2D
 	FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	// Check player has a controller or camera movement is disabled
-	if (Controller == nullptr || blockCamera) return;
 
 	// Reduces camera speed
 	if (slowCamera) LookAxisVector *= INTERACTING_CAMERA_SLOW;
@@ -186,7 +201,9 @@ void APlayerCharacter::Look(const FInputActionValue& Value) {
 	}
 }
 
-void APlayerCharacter::LightLamp(const FInputActionValue& Value) {
+void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
+	if (blockInput) return;
+
 	lightOn = not lightOn;
 
 	if (lightOn)	TL_TurnLighOn->Play();
@@ -252,6 +269,16 @@ void APlayerCharacter::UpdateStamina(float time) {
 	}
 }
 
+int32 APlayerCharacter::AddPaperOrdered(const PaperMessage& paper) {
+	for (int32 i{ 0 }; i < collectedPapers.Num(); ++i) {
+		if (paper.title.Compare(collectedPapers[i].title) < 0) {
+			return collectedPapers.Insert(paper, i);
+		}
+	}
+
+	return collectedPapers.Add(paper);;
+}
+
 
 
 void APlayerCharacter::setupStimulusSource()
@@ -265,6 +292,8 @@ void APlayerCharacter::setupStimulusSource()
 }
 
 void APlayerCharacter::Interact(const FInputActionValue& Value) {
+	if (blockInput) return;
+
 	// Raycast to get actor in sight
 	FVector from	{ camera->GetComponentLocation() };
 	FVector to		{ from + camera->GetComponentRotation().Vector() * INTERACTION_DISTANCE };
@@ -299,12 +328,18 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 			else if (hitActor->IsA<APaper>()) {
 				APaper* paperActor{ Cast<APaper>(hitActor) };
 
-				auto index = collectedPapers.Add({ paperActor->message, paperActor->title });
-
+				auto index = AddPaperOrdered({ paperActor->message, paperActor->title });
+				
 				// Show paper
 				OnPaperCollected.Broadcast(collectedPapers[index].message);
-				blockCamera = true;
-				blockMovement = true;
+				blockInput = true;
+
+				interactingWith = hitActor;
+			}
+			else if (hitActor->IsA<AMausoleumDoor>()) {
+				AMausoleumDoor* doorActor{ Cast<AMausoleumDoor>(hitActor) };
+
+				doorActor->InteractDoor(raycastResult.GetComponent());
 
 				interactingWith = hitActor;
 			}
@@ -343,15 +378,55 @@ void APlayerCharacter::SetMoney(int m = 0){
 
 void APlayerCharacter::AddMoney(int m) {
 	money += m;
+	OnMoneyIncrease.Broadcast(m, money);
 }
 
 void APlayerCharacter::ClosePaper() {
 	if (paperWidget != nullptr) {
 		paperWidget->RemoveFromParent();
 
-		blockCamera = false;
-		blockMovement = false;
+		if(not uiWidgetActive)
+			blockInput = false;
 
 		paperWidget = nullptr;
 	}
+}
+
+TArray<FName> APlayerCharacter::getCollectedPapersTitles() const {
+	TArray<FName> papers;
+
+	for (auto i{ 0 }; i < collectedPapers.Num(); ++i) {
+		papers.Add(collectedPapers[i].title);
+	}
+
+	return papers;
+}
+
+FText APlayerCharacter::getPaperText(const FName& title) const {
+	for (auto i{ 0 }; i < collectedPapers.Num(); ++i) {
+		if (collectedPapers[i].title.Compare(title) == 0) {
+			return collectedPapers[i].message;
+		}
+	}
+
+	return FText();
+}
+
+void APlayerCharacter::SetMausoleumNumber(int size) {
+	collectedEmblems.SetNum(FMath::Max(size, 0));
+
+	for (int i{ 0 }; i < collectedEmblems.Num(); ++i) {
+		collectedEmblems[i] = 0;
+	}
+}
+
+void APlayerCharacter::EmblemCollected(int id) {
+	if (collectedEmblems.IsValidIndex(id)) {
+		collectedEmblems[id]++;
+	}
+	OnEmblemCollected.Broadcast(id);
+}
+
+TArray<int> APlayerCharacter::GetCollectedEmblems() {
+	return collectedEmblems;
 }

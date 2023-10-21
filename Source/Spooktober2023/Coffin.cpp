@@ -45,6 +45,7 @@ void ACoffin::BeginPlay()
 	Super::BeginPlay();
 	
 	SetJewelsCollection(jewels);
+	SetEmblemMaterialCollection(emblemsMaterial);
 	opened = false;
 	SetCanBeOpened(false);
 
@@ -53,9 +54,7 @@ void ACoffin::BeginPlay()
 	fcallback.BindUFunction(this, FName{ TEXT("SetCoffinDoorRotation") });
 	TL_Open->AddInterpFloat(DoorOpenCurve, fcallback);
 
-	tombValue = rand() % 10;
-
-	UpdateMeshes();
+	SetCanBeOpened(richCoffin);
 }
 
 // Called every frame
@@ -74,6 +73,14 @@ void ACoffin::SetJewelsCollection(const TArray<UStaticMesh*>& col) {
 	jewelsCollection.Append(col);
 }
 
+void ACoffin::SetEmblemMaterialCollection(const TArray<UMaterialInstance*>& col) {
+	if (col.IsEmpty() || col.Num() <= emblemMaterialsCollection.Num()) return;
+
+	emblemMaterialsCollection.Empty();
+
+	emblemMaterialsCollection.Append(col);
+}
+
 void ACoffin::ClearJewelsCollection() {
 	jewelsCollection.Empty();
 }
@@ -83,7 +90,15 @@ void ACoffin::SetOutcomeValue(bool negative) {
 }
 
 void ACoffin::SetTombValue(int value) {
+	keyId = -1;
 	tombValue = FMath::Max(value, 0);
+
+	UpdateMeshes();
+}
+
+void ACoffin::SetKeyId(int id) {
+	keyId = id;
+	tombValue = 0;
 
 	UpdateMeshes();
 }
@@ -99,11 +114,27 @@ void ACoffin::OpenCoffin(APlayerCharacter* player) {
 	if (not opened && canBeOpened) {
 		TL_Open->Play();
 		opened = true;
+
+		// If its has a negative outcome, broadcast delegate
+		if (negativeOutcome) OnBadCoffinOppened.Broadcast(this);
 	}
-	else if (opened && tombValue > 0) {
-		if (player != nullptr)
-			player->AddMoney(tombValue);
-		tombValue = 0;
+	else if (opened) { 
+		if (keyId != -1) {
+			// Emblem found inside coffin
+			OnEmblemCollected.Broadcast(keyId);
+			if (player != nullptr)
+				player->EmblemCollected(keyId);
+
+			keyId = -1;
+		}
+		else if (tombValue > 0) {
+			// Coffin has something inside
+			if (player != nullptr)
+				player->AddMoney(tombValue);
+
+			tombValue = 0;
+		}
+
 		jewelMesh->SetVisibility(false);
 		Tags.Remove("Interactable");
 	}
@@ -116,9 +147,22 @@ void ACoffin::SetCoffinDoorRotation(float rot) {
 }
 
 void ACoffin::UpdateMeshes() {
-	jewelMesh->SetVisibility(tombValue > 0);
+	jewelMesh->SetVisibility(tombValue > 0 || keyId != -1);
 	
-	if (tombValue > 0 && not jewelsCollection.IsEmpty()) {
+	if (keyId != -1 && emblemMesh != nullptr) {
+		jewelMesh->SetStaticMesh(emblemMesh);
+		jewelMesh->SetMaterial(0, emblemMaterialsCollection[FMath::Min(emblemMaterialsCollection.Num() - 1, keyId)]);
+	}
+	else if (tombValue > 0 && not jewelsCollection.IsEmpty()) {
 		jewelMesh->SetStaticMesh(jewelsCollection[rand() % jewelsCollection.Num()]);
 	}
+	else {
+		jewelMesh->SetStaticMesh(nullptr);
+	}
+}
+
+UMaterialInstance* ACoffin::GetEmblemMaterialByIndex(int index) {
+	if (index < 0 || index >= emblemMaterialsCollection.Num()) return nullptr;
+
+	return emblemMaterialsCollection[index];
 }

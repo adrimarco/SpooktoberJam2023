@@ -17,8 +17,19 @@ class UAIPerceptionStimuliSourceComponent;
 class ACoffin;
 class UUserWidget;
 
+struct PaperMessage {
+	FText message;
+	FName title;
+};
+
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPaperCollectedDelegate, FText, paperText);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEmblemCollectedDelegate, int, emblemId);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoneyIncreasedDelegate, int, moneyAdded, int, totalMoney);
 
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
@@ -40,6 +51,8 @@ public:
 	void StopInteract(const FInputActionValue& Value);
 	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
+	int32 AddPaperOrdered(const PaperMessage& paper);
+
 	UFUNCTION(BlueprintCallable)
 	void LightLamp(const FInputActionValue& Value);
 	UFUNCTION(BlueprintCallable)
@@ -58,15 +71,23 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void extinguishLamp();
+	TArray<FName> getCollectedPapersTitles() const;
+
+	UFUNCTION(BlueprintCallable)
+	FText getPaperText(const FName& title) const;
+
+	UFUNCTION(BlueprintCallable)
+	void SetMausoleumNumber(int size);
+
+	UFUNCTION(BlueprintCallable)
+	void EmblemCollected(int id);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	TArray<int> GetCollectedEmblems();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	struct PaperMessage {
-		FText message;
-		FName title;
-	};
 
 public:	
 	// Called every frame
@@ -97,21 +118,33 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
 	FVector interactionDirection{};
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool blockInput{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool blockMovement{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool blockCamera{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool slowCamera{ false };
 
-	TArray<PaperMessage> collectedPapers;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	bool uiWidgetActive{ false };
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Interaction")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	UUserWidget* paperWidget{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UUserWidget* inventoryWidget{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UUserWidget* messageWidget{ nullptr };
+
+	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };
+	TArray<int> collectedEmblems;
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
@@ -162,6 +195,12 @@ public:
 	// Event dispatcher
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FPaperCollectedDelegate OnPaperCollected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FEmblemCollectedDelegate OnEmblemCollected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FMoneyIncreasedDelegate OnMoneyIncrease;
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
 	constexpr UPointLightComponent* GetPointLight()	const { return lampLight; }
