@@ -372,6 +372,7 @@ void APlayerCharacter::SetMoney(int m = 0){
 
 void APlayerCharacter::AddMoney(int m) {
 	money += m;
+	OnMoneyIncrease.Broadcast(m, money);
 }
 
 void APlayerCharacter::ClosePaper() {
@@ -417,6 +418,7 @@ void APlayerCharacter::EmblemCollected(int id) {
 	if (collectedEmblems.IsValidIndex(id)) {
 		collectedEmblems[id]++;
 	}
+	OnEmblemCollected.Broadcast(id);
 }
 
 TArray<int> APlayerCharacter::GetCollectedEmblems() {

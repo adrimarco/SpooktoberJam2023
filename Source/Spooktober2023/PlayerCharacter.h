@@ -25,6 +25,12 @@ struct PaperMessage {
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPaperCollectedDelegate, FText, paperText);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEmblemCollectedDelegate, int, emblemId);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoneyIncreasedDelegate, int, moneyAdded, int, totalMoney);
+
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
 {
@@ -132,6 +138,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	UUserWidget* inventoryWidget{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UUserWidget* messageWidget{ nullptr };
+
 	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };
 	TArray<int> collectedEmblems;
@@ -185,6 +194,12 @@ public:
 	// Event dispatcher
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FPaperCollectedDelegate OnPaperCollected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FEmblemCollectedDelegate OnEmblemCollected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FMoneyIncreasedDelegate OnMoneyIncrease;
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
 	constexpr UPointLightComponent* GetPointLight()	const { return lampLight; }
