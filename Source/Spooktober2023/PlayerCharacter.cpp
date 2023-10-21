@@ -193,6 +193,12 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value) {
 	else			TL_TurnLighOn->Reverse();
 }
 
+void APlayerCharacter::extinguishLamp()
+{
+	lightOn = false;
+	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
+}
+
 void APlayerCharacter::SetLightIntensityFactor(float intensityFactor) {
 	lampLight->SetIntensity(lightIntensity * intensityFactor);
 }

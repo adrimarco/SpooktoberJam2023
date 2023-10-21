@@ -2,7 +2,7 @@
 
 
 #include "BTTask_ChasePlayer.h"
-#include "Monster_AIController.h"
+#include "AIController.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Blueprint/AIBlueprintHelperLibrary.h"
 #include <Kismet/KismetMathLibrary.h>
@@ -16,7 +16,7 @@ UBTTask_ChasePlayer::UBTTask_ChasePlayer(FObjectInitializer const& objInit)
 EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
 	//get target from the ai controller
-	if (AMonster_AIController* const cont = Cast<AMonster_AIController>(OwnerComp.GetAIOwner())) {
+	if (AAIController* const cont = Cast<AAIController>(OwnerComp.GetAIOwner())) {
 		FVector const pLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(GetSelectedBlackboardKey());
 
 		//move enemy to the location
@@ -26,5 +26,7 @@ EBTNodeResult::Type UBTTask_ChasePlayer::ExecuteTask(UBehaviorTreeComponent& Own
 		FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		return EBTNodeResult::Succeeded;
 	}
+
+	FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 	return EBTNodeResult::Failed;
 }

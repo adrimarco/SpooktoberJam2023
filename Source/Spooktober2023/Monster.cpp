@@ -30,13 +30,6 @@ void AMonster::Tick(float DeltaTime)
 
 }
 
-// Called to bind functionality to input
-void AMonster::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-}
-
 UBehaviorTree* AMonster::GetBehaviorTree() const noexcept
 {
 	return bTree;

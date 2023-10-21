@@ -56,6 +56,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
 
+	UFUNCTION(BlueprintCallable)
+	void extinguishLamp();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
