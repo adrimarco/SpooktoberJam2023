@@ -96,10 +96,29 @@ UTimelineComponent* AGhost::getTimelineAnimation()
 	return TL_Opacity;
 }
 
+
 void AGhost::setMaterialOpacity(float op)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Opacity: %f"), op);
 	dynamicMaterial->SetScalarParameterValue("Opacity", op);
+}
+
+
+void AGhost::playerEnteredSecureArea(bool playerEntered)
+{
+	AAIController* aiCont = Cast<AAIController>(GetController());
+	if (playerEntered) {
+		aiCont->GetBlackboardComponent()->SetValueAsBool("LampState", false);
+		aiCont->GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
+	}
+	else {
+
+		if (ACharacter* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
+			APlayerCharacter const* p = Cast<APlayerCharacter>(player);
+			aiCont->GetBlackboardComponent()->SetValueAsBool("LampState", p->getLampState());
+		}
+
+	}
 }
 
 
@@ -136,4 +155,3 @@ void AGhost::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedCompon
 void AGhost::OnAttackCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 }
-

@@ -430,3 +430,9 @@ void APlayerCharacter::EmblemCollected(int id) {
 TArray<int> APlayerCharacter::GetCollectedEmblems() {
 	return collectedEmblems;
 }
+
+
+void APlayerCharacter::enterSecureZone(bool enterArea)
+{
+	OnEnterSecureArea.Broadcast(enterArea);
+}

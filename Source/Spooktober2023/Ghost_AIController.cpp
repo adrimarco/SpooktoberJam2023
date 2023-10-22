@@ -9,7 +9,6 @@
 
 AGhost_AIController::AGhost_AIController(FObjectInitializer const& objInit)
 {
-
 	
 }
 
@@ -17,7 +16,7 @@ void AGhost_AIController::Tick(float DeltaTime)
 {
 
 	bool IsInsideRadius = GetBlackboardComponent()->GetValueAsBool("InsideRadius");
-
+	float angerLevelBB = GetBlackboardComponent()->GetValueAsFloat("AngerLevel");
 	if (ACharacter* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 		APlayerCharacter const* p = Cast<APlayerCharacter>(player);
 		lampState = p->getLampState();
@@ -26,8 +25,9 @@ void AGhost_AIController::Tick(float DeltaTime)
 	if (IsInsideRadius) {
 		if (timerAnger >= MAX_TIMER_ANGER) {
 			if (lampState) {
-				angerLevel += DeltaTime;
-				angerLevel = FMath::Min(angerLevel, 1.f);
+				angerLevelBB += DeltaTime;
+				angerLevel = (angerLevelBB = FMath::Min(angerLevelBB, 1.f));
+				
 			}
 			
 			timerAnger = 0.f;
@@ -37,10 +37,11 @@ void AGhost_AIController::Tick(float DeltaTime)
 		}
 	}
 
-	ghostActor->setSphereCollisionRadius(FMath::Lerp(ghostActor->minSightRadius, ghostActor->maxSightRadius, angerLevel));
+	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", angerLevelBB);
+	ghostActor->setSphereCollisionRadius(FMath::Lerp(ghostActor->minSightRadius, ghostActor->maxSightRadius, angerLevelBB));
 	float maxSpeed = (IsInsideRadius) ? ghostActor->maxSpeed : FMath::Min(ghostActor->speed, ghostActor->wanderSpeed);
-	ghostActor->setSpeedGhost(FMath::Lerp(ghostActor->minSpeed, maxSpeed, angerLevel));
-	//UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevel);
+	ghostActor->setSpeedGhost(FMath::Lerp(ghostActor->minSpeed, maxSpeed, angerLevelBB));
+	UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevelBB);
 }
 
 void AGhost_AIController::updateOriginPosition(FVector oPos)
@@ -50,9 +51,14 @@ void AGhost_AIController::updateOriginPosition(FVector oPos)
 }
 
 void AGhost_AIController::teleportActor() {
-	FVector target = GetBlackboardComponent()->GetValueAsVector("OriginPosition");
-	ghostActor->SetActorLocation(target);
-	ghostActor->TL_Opacity->SetPlaybackPosition(0.f, false);
+
+	if (!ghostActor->TL_Opacity->IsReversing()) {
+		FVector target = GetBlackboardComponent()->GetValueAsVector("OriginPosition");
+		ghostActor->SetActorLocation(target);
+		ghostActor->TL_Opacity->Reverse();
+		//ghostActor->TL_Opacity->SetPlaybackPosition(0.f, false);
+	}
+	
 }
 
 

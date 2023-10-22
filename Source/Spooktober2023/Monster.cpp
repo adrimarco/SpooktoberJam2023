@@ -47,3 +47,22 @@ int AMonster::MeleeAttack_Implementation()
 
 	return 0;
 }
+
+void AMonster::playerEnteredSecureArea(bool playerEntered)
+{
+	AAIController* aiCont = Cast<AAIController>(GetController());
+	if (playerEntered) {
+		aiCont->GetBlackboardComponent()->SetValueAsBool("LampState", true);
+		aiCont->GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
+		aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+	}
+	else {
+
+		if (ACharacter* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
+			APlayerCharacter const* p = Cast<APlayerCharacter>(player);
+			aiCont->GetBlackboardComponent()->SetValueAsBool("LampState", p->getLampState());
+		}
+		
+		aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
+	}
+}

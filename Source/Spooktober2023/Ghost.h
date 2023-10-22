@@ -87,6 +87,9 @@ public:
 
 	UTimelineComponent* getTimelineAnimation();
 
+
+	void playerEnteredSecureArea(bool);
+
 	
 
 	UFUNCTION()

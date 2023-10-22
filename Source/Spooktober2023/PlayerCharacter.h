@@ -31,6 +31,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEmblemCollectedDelegate, int, emble
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoneyIncreasedDelegate, int, moneyAdded, int, totalMoney);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnterSecureZoneDelegate, bool, enter);
+
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
 {
@@ -69,8 +72,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
 
-	UFUNCTION(BlueprintCallable)
 	void extinguishLamp();
+	UFUNCTION(BlueprintCallable)
 	TArray<FName> getCollectedPapersTitles() const;
 
 	UFUNCTION(BlueprintCallable)
@@ -201,6 +204,11 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FMoneyIncreasedDelegate OnMoneyIncrease;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FEnterSecureZoneDelegate OnEnterSecureArea;
+
+	void enterSecureZone(bool enterArea);
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
 	constexpr UPointLightComponent* GetPointLight()	const { return lampLight; }

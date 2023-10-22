@@ -31,6 +31,8 @@ public:
 
 	int MeleeAttack_Implementation() override;
 
+	void playerEnteredSecureArea(bool);
+
 
 protected:
 	// Called when the game starts or when spawned
