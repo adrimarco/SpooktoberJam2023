@@ -71,8 +71,11 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	bool getLampState() const noexcept;
+	UFUNCTION(BlueprintCallable)
+	void extinguishLamp(float time = 60.f);
+	UFUNCTION(BlueprintCallable)
+	void igniteLamp();
 
-	void extinguishLamp();
 	UFUNCTION(BlueprintCallable)
 	TArray<FName> getCollectedPapersTitles() const;
 
@@ -102,6 +105,9 @@ public:
 	// Class variables
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Lamp")
 	bool lightOn{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
+	bool blockLamp{ false };
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
 	float lightIntensity{ 2000.f };
@@ -144,6 +150,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	UUserWidget* messageWidget{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	UUserWidget* screenWidget{ nullptr };
 
 	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };

@@ -20,6 +20,7 @@
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
+constexpr auto MIN_LIGHT_INTENSITY		= 100.f;
 constexpr auto LIGHT_ATTENUATION_RADIUS = 2000.f;
 constexpr auto MAX_STAMINA				= 10.f;
 constexpr auto MIN_RUN_STAMINA			= 5.f;
@@ -97,7 +98,7 @@ void APlayerCharacter::BeginPlay()
 	}
 
 	// Initial light state
-	lampLight->SetIntensity(lightOn ? lightIntensity : 0.f);
+	lampLight->SetIntensity(lightOn ? lightIntensity : MIN_LIGHT_INTENSITY);
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
@@ -202,7 +203,7 @@ void APlayerCharacter::Look(const FInputActionValue& Value) {
 }
 
 void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
-	if (blockInput) return;
+	if (blockInput || blockLamp) return;
 
 	lightOn = not lightOn;
 
@@ -210,14 +211,29 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 	else			TL_TurnLighOn->Reverse();
 }
 
-void APlayerCharacter::extinguishLamp()
+void APlayerCharacter::extinguishLamp(float time)
 {
+	// Turn off lamp
 	lightOn = false;
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
+	lampLight->SetIntensity(0.f);
+
+	// Prevent lighting it again
+	blockLamp = true;
+
+	// Set timer for recovering light
+	FTimerHandle tHandle;
+	GetWorldTimerManager().SetTimer(tHandle, this, &APlayerCharacter::igniteLamp, time, false, time);
+}
+
+void APlayerCharacter::igniteLamp() {
+	// Recover lamp light
+	blockLamp = false;
+	lampLight->SetIntensity(MIN_LIGHT_INTENSITY);
 }
 
 void APlayerCharacter::SetLightIntensityFactor(float intensityFactor) {
-	lampLight->SetIntensity(lightIntensity * intensityFactor);
+	lampLight->SetIntensity(MIN_LIGHT_INTENSITY + (lightIntensity - MIN_LIGHT_INTENSITY) * intensityFactor);
 }
 
 void APlayerCharacter::ApplyCameraShake() {
