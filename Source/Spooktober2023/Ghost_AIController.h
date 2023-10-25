@@ -40,6 +40,9 @@ public:
 	void updateOriginPosition(FVector oPos);
 	UFUNCTION(BlueprintCallable)
 	void teleportActor();
+
+	UFUNCTION(BlueprintCallable)
+	void increaseAngerLevel(float c = 0.2);
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 

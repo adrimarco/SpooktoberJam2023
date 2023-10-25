@@ -61,6 +61,12 @@ void AGhost_AIController::teleportActor() {
 	
 }
 
+void AGhost_AIController::increaseAngerLevel(float c)
+{
+	float angerLevelBB = GetBlackboardComponent()->GetValueAsFloat("AngerLevel");
+	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", angerLevelBB+c);
+}
+
 
 void AGhost_AIController::OnPossess(APawn* InPawn)
 {
