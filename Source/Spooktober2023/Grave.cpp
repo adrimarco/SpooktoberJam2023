@@ -8,6 +8,8 @@
 #include "Curves/CurveVector.h"
 #include "Components/BoxComponent.h"
 #include "Text3DComponent.h"
+#include "Components/AudioComponent.h"
+#include "PlayerCharacter.h"
 
 
 constexpr auto COFFIN_INIT_Z	= -56.f;
@@ -35,6 +37,13 @@ AGrave::AGrave()
 	coffinActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Coffin Actor"));
 	coffinActor->SetupAttachment(GetRootComponent());
 	coffinActor->SetRelativeLocation(FVector(0.f, 191.3f, COFFIN_INIT_Z));
+
+	// Audio component
+	digSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Dig Sound"));
+	digSound->SetupAttachment(GetRootComponent());
+	digSound->bAutoActivate = false;
+	digSound->bOverrideAttenuation = true;
+	digSound->bAllowSpatialization = true;
 	
 	// Dig timeline
 	TL_Dig = CreateDefaultSubobject<UTimelineComponent>(TEXT("Dig Animation"));
@@ -103,7 +112,7 @@ void AGrave::BeginPlay()
 	TL_Dig->AddInterpFloat(CoffinPositionCurve, fcallback);
 
 	TL_Dig->SetNewTime(0.f);
-	TL_Dig->SetPlayRate(10.f);
+	//TL_Dig->SetPlayRate(10.f);
 
 	// Bind timeline finish function
 	FOnTimelineEventStatic func;
@@ -123,14 +132,20 @@ void AGrave::SetCoffinHeight(float height) {
 	coffinActor->SetRelativeLocation(currentLocation);
 }
 
-void AGrave::StartDigging() {
+bool AGrave::StartDigging(APlayerCharacter* p) {
 	if (not digged) {
 		TL_Dig->Play();
+		digSound->Play();
 	}
+
+	player = p;
+
+	return not digged;
 }
 
 void AGrave::StopDigging() {
 	if (TL_Dig->IsPlaying()) {
+		digSound->Stop();
 		TL_Dig->Stop();
 	}
 }
@@ -138,8 +153,11 @@ void AGrave::StopDigging() {
 void AGrave::FinishDigging() {
 	if (not looted) {
 		looted = true;
+		digSound->Stop();
 		Cast<ACoffin>(coffinActor->GetChildActor())->SetCanBeOpened(true);
 		Tags.Remove("Interactable");
+
+		if(player != nullptr) player->StopDigging();
 	}
 }
 

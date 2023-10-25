@@ -13,6 +13,7 @@ class UCurveFloat;
 class UCurveVector;
 class UBoxComponent;
 class UText3DComponent;
+class APlayerCharacter;
 
 UCLASS()
 class SPOOKTOBER2023_API AGrave : public AActor
@@ -27,7 +28,7 @@ public:
 	void SetCoffinHeight(float height);
 
 	UFUNCTION(BlueprintCallable)
-	void StartDigging();
+	bool StartDigging(APlayerCharacter* p);
 
 	UFUNCTION(BlueprintCallable)
 	void StopDigging();
@@ -61,6 +62,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grave State")
 	bool looted{ false };
 
+	APlayerCharacter* player{ nullptr };
+
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
 	UStaticMeshComponent* graveMesh{ nullptr };
@@ -79,6 +82,9 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UText3DComponent* deadNameText{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* digSound{ nullptr };
 
 	// Timeline curves
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")

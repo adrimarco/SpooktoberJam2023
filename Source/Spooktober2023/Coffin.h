@@ -89,6 +89,9 @@ public:
 	UStaticMeshComponent* jewelMesh{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* doorSound{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_Open{ nullptr };
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")

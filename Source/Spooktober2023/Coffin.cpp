@@ -4,6 +4,7 @@
 #include "Coffin.h"
 #include "Components/TimelineComponent.h"
 #include "PlayerCharacter.h"
+#include "Components/AudioComponent.h"
 
 constexpr auto COFFIN_OPENED_ROTATION = 70.f;
 
@@ -33,6 +34,13 @@ ACoffin::ACoffin()
 
 	jewelMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Jewel Mesh"));
 	jewelMesh->SetupAttachment(bodyMesh);
+
+	// Audio component
+	doorSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Door Sound"));
+	doorSound->SetupAttachment(root);
+	doorSound->bAutoActivate = false;
+	doorSound->bOverrideAttenuation = true;
+	doorSound->bAllowSpatialization = true;
 
 	// Open coffin timeline
 	TL_Open = CreateDefaultSubobject<UTimelineComponent>(TEXT("Open Coffin Animation"));
@@ -113,6 +121,7 @@ void ACoffin::SetCanBeOpened(bool value) {
 void ACoffin::OpenCoffin(APlayerCharacter* player) {
 	if (not opened && canBeOpened) {
 		TL_Open->Play();
+		doorSound->Play();
 		opened = true;
 
 		// If its has a negative outcome, broadcast delegate
