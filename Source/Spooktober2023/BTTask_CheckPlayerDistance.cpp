@@ -21,6 +21,7 @@ EBTNodeResult::Type UBTTask_CheckPlayerDistance::ExecuteTask(UBehaviorTreeCompon
 		AMonster const* enemy = Cast<AMonster>(aiCont->GetPawn());
 
 		OwnerComp.GetBlackboardComponent()->SetValueAsBool(GetSelectedBlackboardKey(), (enemy->GetDistanceTo(player) > playerInRadius));
+		OwnerComp.GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
 		aiCont->trackPlayer = false;
 
 		//return success

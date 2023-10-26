@@ -26,6 +26,7 @@ EBTNodeResult::Type UBTTask_MeleeAttack::ExecuteTask(UBehaviorTreeComponent& Own
 	auto* const enemy = Cast<AMonster>(aiCont->GetPawn());
 	if (auto* const icombat = Cast<ICombat_Interface>(enemy)) {
 		icombat->Execute_MeleeAttack(enemy);
+		OwnerComp.GetBlackboardComponent()->SetValueAsBool("Attacking", true);
 	}
 	//return success
 	FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);

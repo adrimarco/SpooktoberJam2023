@@ -43,7 +43,7 @@ EBTNodeResult::Type UBTTask_FindLocationFlee::ExecuteTask(UBehaviorTreeComponent
 					}
 					if (validPosition) {
 						OwnerComp.GetBlackboardComponent()->SetValueAsVector(GetSelectedBlackboardKey(), loc.Location);
-						OwnerComp.GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
+						//OwnerComp.GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
 					}
 
 					//return success
