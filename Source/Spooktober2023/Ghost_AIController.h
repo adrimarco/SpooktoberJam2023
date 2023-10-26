@@ -42,7 +42,8 @@ public:
 	void teleportActor();
 
 	UFUNCTION(BlueprintCallable)
-	void increaseAngerLevel(float c = 0.2);
+	void increaseAngerLevel(float increaseFactor = 0.2);
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 

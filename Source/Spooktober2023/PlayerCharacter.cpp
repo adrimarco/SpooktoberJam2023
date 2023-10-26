@@ -12,11 +12,13 @@
 #include "Perception/AISense_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/AudioComponent.h"
 // Interaction actors
 #include "Coffin.h"
 #include "Grave.h"
 #include "Paper.h"
 #include "MausoleumDoor.h"
+#include "Shovel.h"
 
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
@@ -79,6 +81,21 @@ APlayerCharacter::APlayerCharacter()
 	lampLight->SetLightColor(FLinearColor(1.f, 0.173f, 0.f));
 	lampLight->SetRelativeLocation(FVector(0.f, -1.17f, 10.f));
 
+	// Audio components
+	stepsSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Steps Sound"));
+	stepsSound->SetupAttachment(GetRootComponent());
+	stepsSound->bAutoActivate = false;
+	stepsSound->bOverrideAttenuation = true;
+	stepsSound->bAllowSpatialization = true;
+
+	lampSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Lamp Sound"));
+	lampSound->SetupAttachment(GetRootComponent());
+	lampSound->bAutoActivate = false;
+
+	// Child actors
+	shovelActor = CreateDefaultSubobject<UChildActorComponent>(TEXT("Shovel Actor"));
+	shovelActor->SetupAttachment(GetRootComponent());
+
 	// Turn light on/off timeline
 	TL_TurnLighOn = CreateDefaultSubobject<UTimelineComponent>(TEXT("Turn Light On"));
 }
@@ -105,6 +122,13 @@ void APlayerCharacter::BeginPlay()
 	cameraManager->ViewPitchMin = -45.f;
 	cameraManager->ViewPitchMax = 40.f;
 
+	// Configure steps sound
+	stepsSound->SetIntParameter("Speed", 0);
+	stepsSound->SetIntParameter("FloorType", 0);
+
+	// Child actors
+	if (shovelBP != nullptr) shovelActor->SetChildActorClass(shovelBP);
+
 	// Timeline binding functions
 	FOnTimelineFloat fcallback;
 	fcallback.BindUFunction(this, FName{ TEXT("SetLightIntensityFactor") });
@@ -128,6 +152,9 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	ApplyCameraShake();
 	UpdateStamina(DeltaTime);
+
+	if (GetVelocity().IsZero() && GetWorldTimerManager().IsTimerActive(stepsSoundHandle)) GetWorldTimerManager().ClearTimer(stepsSoundHandle);
+	else CheckFloorMaterial();
 }
 
 // Called to bind functionality to input
@@ -177,6 +204,9 @@ void APlayerCharacter::Move(const FInputActionValue& Value) {
 	// Add movement 
 	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
 	AddMovementInput(GetActorRightVector(), MovementVector.X);
+
+	// Steps sound
+	if (not stepsSound->IsPlaying()) UpdateStepsSound();
 }
 
 void APlayerCharacter::Look(const FInputActionValue& Value) {
@@ -203,10 +233,15 @@ void APlayerCharacter::Look(const FInputActionValue& Value) {
 }
 
 void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
-	if (blockInput || blockLamp) return;
+	if (blockInput || blockLamp || TL_TurnLighOn->IsPlaying()) return;
 
 	lightOn = not lightOn;
 
+	// Play sound
+	lampSound->SetBoolParameter("TurnOn", true);
+	lampSound->Play();
+
+	// Play animation
 	if (lightOn)	TL_TurnLighOn->Play();
 	else			TL_TurnLighOn->Reverse();
 }
@@ -217,6 +252,10 @@ void APlayerCharacter::extinguishLamp(float time)
 	lightOn = false;
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
 	lampLight->SetIntensity(0.f);
+
+	// Play sound
+	lampSound->SetBoolParameter("TurnOn", false);
+	lampSound->Play();
 
 	// Prevent lighting it again
 	blockLamp = true;
@@ -260,11 +299,15 @@ void APlayerCharacter::StartSprint(const FInputActionValue& Value = {}) {
 
 	running = true;
 	GetCharacterMovement()->MaxWalkSpeed = RUN_SPEED;
+
+	UpdateStepsSound();
 }
 
 void APlayerCharacter::StopSprint(const FInputActionValue& Value = {}) {
 	running = false;
 	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
+
+	UpdateStepsSound();
 }
 
 void APlayerCharacter::UpdateStamina(float time) {
@@ -334,9 +377,14 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 			else if (hitActor->IsA<AGrave>()) {
 				AGrave* graveActor{ Cast<AGrave>(hitActor) };
 
-				graveActor->StartDigging();
-				slowCamera = true;
-				blockMovement = true;
+				if (graveActor->StartDigging(this)) {
+					slowCamera = true;
+					blockMovement = true;
+
+					shovelActor->SetAbsolute(true);
+					shovelActor->SetWorldLocation(raycastResult.ImpactPoint);
+					Cast<AShovel>(shovelActor->GetChildActor())->PlayAnimation();
+				}
 
 				interactingWith = hitActor;
 			}
@@ -375,6 +423,9 @@ void APlayerCharacter::StopInteract(const FInputActionValue& Value = {}) {
 		AGrave* graveActor{ Cast<AGrave>(interactingWith) };
 
 		graveActor->StopDigging();
+		Cast<AShovel>(shovelActor->GetChildActor())->StopAnimation();
+		shovelActor->SetAbsolute(false);
+		shovelActor->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
 		slowCamera = false;
 		blockMovement = false;
 	}
@@ -447,8 +498,60 @@ TArray<int> APlayerCharacter::GetCollectedEmblems() {
 	return collectedEmblems;
 }
 
+void APlayerCharacter::StopDigging() {
+	if (interactingWith == nullptr || not interactingWith->IsA<AGrave>()) return;
+
+	StopInteract();
+}
+
 
 void APlayerCharacter::enterSecureZone(bool enterArea)
 {
 	OnEnterSecureArea.Broadcast(enterArea);
+}
+
+void APlayerCharacter::UpdateStepsSound() {
+	float playRate{ 0.7f };
+	FTimerManager& tm = GetWorldTimerManager();
+
+	if (running) playRate = 0.4f;
+
+	// Check if exists other timer
+	if (tm.IsTimerActive(stepsSoundHandle) && tm.GetTimerRate(stepsSoundHandle) != playRate) {
+		tm.ClearTimer(stepsSoundHandle);
+		tm.SetTimer(stepsSoundHandle, this, &APlayerCharacter::PlayStepsSound, playRate, true, 0);
+	}
+	else if (not GetVelocity().IsZero() && not tm.IsTimerActive(stepsSoundHandle)) {
+		tm.SetTimer(stepsSoundHandle, this, &APlayerCharacter::PlayStepsSound, playRate, true, 0);
+	}
+}
+
+void APlayerCharacter::CheckFloorMaterial() {
+	int material{ 0 };
+
+	// Raycast to get actor under player
+	FVector from{ GetActorLocation()};
+	FVector to{ from - FVector(0.f, 0.f, 100.f)};
+
+	FHitResult raycastResult;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(raycastResult, from, to, ECC_Visibility, params)) {
+		// Check if actor has a footsteps sound tag
+		AActor* actor{ raycastResult.GetActor() };
+		if		(actor->ActorHasTag("WoodenFloor"))		material = 1;
+		else if (actor->ActorHasTag("ConcreteFloor"))	material = 2;
+		else											material = 0;
+	}
+	else {
+		material = 0;
+	}
+
+	// Update sound parameter
+	stepsSound->SetIntParameter("FloorType", material);
+}
+
+void APlayerCharacter::PlayStepsSound() {
+	stepsSound->Play();
 }

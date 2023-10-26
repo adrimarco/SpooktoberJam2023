@@ -4,6 +4,7 @@
 #include "MausoleumDoor.h"
 #include "Text3DComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Components/AudioComponent.h"
 
 #define EMBLEM_PLACED_POSITION	FVector(-42.f, -5.1f, 162.f)
 #define EMBLEM_INITIAL_Y		-10.f
@@ -52,6 +53,13 @@ AMausoleumDoor::AMausoleumDoor()
 	mausoleumFamiliyText->SetVerticalAlignment(EText3DVerticalTextAlignment::Center);
 	mausoleumFamiliyText->SetHasMaxWidth(true);
 	mausoleumFamiliyText->SetMaxWidth(300.f);
+
+	// Audio component
+	doorSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Door Sound"));
+	doorSound->SetupAttachment(root);
+	doorSound->bAutoActivate = false;
+	doorSound->bOverrideAttenuation = true;
+	doorSound->bAllowSpatialization = true;
 
 	// Timelines
 	TL_PlaceEmblem = CreateDefaultSubobject<UTimelineComponent>(TEXT("Place Emblem Animation"));
@@ -107,22 +115,19 @@ void AMausoleumDoor::InteractDoor(UActorComponent* component) {
 		if (firstEmblemPlaced && secondEmblemPlaced) {
 			// Open door
 			TL_OpenDoor->PlayFromStart();
+			doorSound->Play();
 			Tags.Remove("Interactable");
 		}
 		else if (component == doorMesh) {
 			// Try to place first emblem
 			if (emblemsCollected>0 && not firstEmblemPlaced) {
-
 				PlaceEmblem(true);
-
 			}
 		}
 		else if (component == secondDoorMesh) {
 			// Try to place second emblem
 			if (emblemsCollected>0 && not secondEmblemPlaced) {
-
 				PlaceEmblem(false);
-
 			}
 		}
 	}

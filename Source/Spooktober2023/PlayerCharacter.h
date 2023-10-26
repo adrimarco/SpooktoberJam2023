@@ -16,6 +16,7 @@ class UInputAction;
 class UAIPerceptionStimuliSourceComponent;
 class ACoffin;
 class UUserWidget;
+class AShovel;
 
 struct PaperMessage {
 	FText message;
@@ -54,6 +55,9 @@ public:
 	void StopInteract(const FInputActionValue& Value);
 	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
+	void PlayStepsSound();
+	void UpdateStepsSound();
+	void CheckFloorMaterial();
 	int32 AddPaperOrdered(const PaperMessage& paper);
 
 	UFUNCTION(BlueprintCallable)
@@ -90,6 +94,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<int> GetCollectedEmblems();
+
+	UFUNCTION(BlueprintCallable)
+	void StopDigging();
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -157,6 +165,7 @@ public:
 	TArray<PaperMessage> collectedPapers;
 	AActor* interactingWith{ nullptr };
 	TArray<int> collectedEmblems;
+	FTimerHandle stepsSoundHandle;
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
@@ -170,6 +179,15 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_TurnLighOn{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* stepsSound{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* lampSound{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UChildActorComponent* shovelActor{ nullptr };
 
 	// Input
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
@@ -203,6 +221,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> MovementShake{ nullptr };
+
+	// Blueprint classes for child actors
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components Blueprint")
+	TSubclassOf<AShovel> shovelBP{ nullptr };
 
 	// Event dispatcher
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")

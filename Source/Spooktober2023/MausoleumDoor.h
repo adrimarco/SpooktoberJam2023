@@ -84,6 +84,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UText3DComponent* mausoleumFamiliyText{ nullptr };
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* doorSound{ nullptr };
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* DoorOpenCurve{ nullptr };
 

@@ -31,7 +31,8 @@ public:
 
 	int MeleeAttack_Implementation() override;
 
-	void playerEnteredSecureArea(bool);
+	UFUNCTION(BlueprintCallable)
+	void playerEnteredSecureArea(bool playerEntered);
 
 
 protected:

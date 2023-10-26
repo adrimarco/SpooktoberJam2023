@@ -87,8 +87,8 @@ public:
 
 	UTimelineComponent* getTimelineAnimation();
 
-
-	void playerEnteredSecureArea(bool);
+	UFUNCTION(BlueprintCallable)
+	void playerEnteredSecureArea(bool playerEntered);
 
 	
 
