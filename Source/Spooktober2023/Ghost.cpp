@@ -145,8 +145,8 @@ void AGhost::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	if (Cast<APlayerCharacter>(OtherActor)) {
 		if (ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 			APlayerCharacter* p = Cast<APlayerCharacter>(player);
-			if(aiController->GetBlackboardComponent()->GetValueAsBool("LampState"))
-				p->extinguishLamp();
+			p->extinguishLamp();
+			OnCallBigMonster.Broadcast();
 			aiController->GetBlackboardComponent()->SetValueAsBool("Flee", true);
 		}
 	}

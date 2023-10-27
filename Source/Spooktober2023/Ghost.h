@@ -14,6 +14,10 @@ class USphereComponent;
 class UBoxComponent;
 class AAIController;
 class UTimelineComponent;
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCallBigMonsterDelegate);
+
 /**
  * 
  */
@@ -55,6 +59,9 @@ public:
 	float sphereRadius{ minSightRadius };
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anger Level", meta = (AllowPrivateAccess = "true"))
 	float speed{ minSpeed };
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FCallBigMonsterDelegate OnCallBigMonster;
 
 
 	bool teleportActorAI{ false };

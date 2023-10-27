@@ -19,7 +19,8 @@ public class Spooktober2023 : ModuleRules
 			"GameplayTasks",
 			"NavigationSystem",
 			"UMG",
-			"Text3D"
+			"Text3D",
+			"Niagara"
 		});
 	}
 }

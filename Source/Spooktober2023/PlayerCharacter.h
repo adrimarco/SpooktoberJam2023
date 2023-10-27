@@ -17,6 +17,8 @@ class UAIPerceptionStimuliSourceComponent;
 class ACoffin;
 class UUserWidget;
 class AShovel;
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 struct PaperMessage {
 	FText message;
@@ -120,6 +122,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
 	float lightIntensity{ 2000.f };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lamp")
+	float fireSize{ 0.4f };
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sprint")
 	float stamina{ 0.f };
 
@@ -176,6 +181,11 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UPointLightComponent* lampLight{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UNiagaraSystem* lampFireParticles;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UNiagaraComponent* niagaraComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_TurnLighOn{ nullptr };

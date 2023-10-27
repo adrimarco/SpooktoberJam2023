@@ -13,6 +13,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/AudioComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 // Interaction actors
 #include "Coffin.h"
 #include "Grave.h"
@@ -23,7 +25,7 @@
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
 constexpr auto MIN_LIGHT_INTENSITY		= 100.f;
-constexpr auto LIGHT_ATTENUATION_RADIUS = 2000.f;
+constexpr auto LIGHT_ATTENUATION_RADIUS = 3000.f;
 constexpr auto MAX_STAMINA				= 10.f;
 constexpr auto MIN_RUN_STAMINA			= 5.f;
 constexpr auto STAMINA_RECOVER_RATE		= 0.8f;
@@ -53,7 +55,7 @@ APlayerCharacter::APlayerCharacter()
 	// Camera
 	camera = CreateDefaultSubobject<UCameraComponent>(TEXT("First Person Camera"));
 	camera->SetupAttachment(GetCapsuleComponent());
-	camera->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
+	camera->SetRelativeLocation(FVector(0.f, 0.f, 60.f));
 	camera->bUsePawnControlRotation = true;
 
 	// Camera post process settings
@@ -70,7 +72,7 @@ APlayerCharacter::APlayerCharacter()
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
 	lampMesh->SetupAttachment(GetCapsuleComponent());
-	lampMesh->SetRelativeLocation(FVector(23.8f, -18.f, 30.f));
+	lampMesh->SetRelativeLocation(FVector(23.8f, -18.f, 40.f));
 	lampMesh->SetRelativeRotation(FRotator(-3.5f, 70.f, -9.7f));
 
 	// Lamp light
@@ -81,6 +83,11 @@ APlayerCharacter::APlayerCharacter()
 	lampLight->SetLightColor(FLinearColor(1.f, 0.173f, 0.f));
 	lampLight->SetRelativeLocation(FVector(0.f, -1.17f, 10.f));
 
+	//Lamp particle
+	niagaraComp = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Lamp Particles"));
+	//niagaraComp->SetNiagaraVariableFloat(FString("Size"), fireSize);
+	niagaraComp->SetupAttachment(lampMesh);
+	niagaraComp->SetRelativeLocation(FVector(0.f, -0.9f, 9.f));
 	// Audio components
 	stepsSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Steps Sound"));
 	stepsSound->SetupAttachment(GetRootComponent());
@@ -125,6 +132,9 @@ void APlayerCharacter::BeginPlay()
 	// Configure steps sound
 	stepsSound->SetIntParameter("Speed", 0);
 	stepsSound->SetIntParameter("FloorType", 0);
+
+	//Configure fire particles
+	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
 
 	// Child actors
 	if (shovelBP != nullptr) shovelActor->SetChildActorClass(shovelBP);
@@ -242,8 +252,14 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 	lampSound->Play();
 
 	// Play animation
-	if (lightOn)	TL_TurnLighOn->Play();
-	else			TL_TurnLighOn->Reverse();
+	if (lightOn) { 
+		TL_TurnLighOn->Play(); 
+		niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.2); 
+	}
+	else { 
+		TL_TurnLighOn->Reverse(); 
+		niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
+	}
 }
 
 void APlayerCharacter::extinguishLamp(float time)
@@ -257,6 +273,9 @@ void APlayerCharacter::extinguishLamp(float time)
 	lampSound->SetBoolParameter("TurnOn", false);
 	lampSound->Play();
 
+
+	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.0);
+
 	// Prevent lighting it again
 	blockLamp = true;
 
@@ -269,6 +288,7 @@ void APlayerCharacter::igniteLamp() {
 	// Recover lamp light
 	blockLamp = false;
 	lampLight->SetIntensity(MIN_LIGHT_INTENSITY);
+	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
 }
 
 void APlayerCharacter::SetLightIntensityFactor(float intensityFactor) {
