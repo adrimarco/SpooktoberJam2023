@@ -9,6 +9,9 @@
 #include "Monster.generated.h"
 
 class UStaticMeshComponent;
+class USpotLightComponent;
+class UAudioComponent;
+class UBoxComponent;
 
 UCLASS()
 class SPOOKTOBER2023_API AMonster : public ACharacter, public ICombat_Interface
@@ -20,11 +23,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
 	UStaticMeshComponent* meshComp{nullptr};
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USpotLightComponent* lampLight{ nullptr };
+
 	// Sets default values for this character's properties
 	AMonster();
 
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	void PostInitializeComponents();
 
 	// Called to bind functionality to input
 	UBehaviorTree* GetBehaviorTree() const noexcept;
@@ -34,6 +43,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void playerEnteredSecureArea(bool playerEntered);
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* idleSound{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* attackSound{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* attackCollider{};
+
+	UFUNCTION()
+	void activateAttackCollision(bool activate);
+
+	UFUNCTION()
+	void OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION()
+	void OnAttackCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 protected:
 	// Called when the game starts or when spawned

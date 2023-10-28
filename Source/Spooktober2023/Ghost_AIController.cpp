@@ -41,7 +41,7 @@ void AGhost_AIController::Tick(float DeltaTime)
 	ghostActor->setSphereCollisionRadius(FMath::Lerp(ghostActor->minSightRadius, ghostActor->maxSightRadius, angerLevelBB));
 	float maxSpeed = (IsInsideRadius) ? ghostActor->maxSpeed : FMath::Min(ghostActor->speed, ghostActor->wanderSpeed);
 	ghostActor->setSpeedGhost(FMath::Lerp(ghostActor->minSpeed, maxSpeed, angerLevelBB));
-	UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevelBB);
+	//UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevelBB);
 }
 
 void AGhost_AIController::updateOriginPosition(FVector oPos)
@@ -52,7 +52,8 @@ void AGhost_AIController::updateOriginPosition(FVector oPos)
 
 void AGhost_AIController::teleportActor() {
 
-	if (!ghostActor->TL_Opacity->IsReversing()) {
+	if (ghostActor->teleportActorAI) {
+		ghostActor->teleportActorAI = false;
 		FVector target = GetBlackboardComponent()->GetValueAsVector("OriginPosition");
 		ghostActor->SetActorLocation(target);
 		ghostActor->TL_Opacity->Reverse();

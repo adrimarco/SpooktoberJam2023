@@ -11,6 +11,7 @@
 #include "Components/TimelineComponent.h"
 #include "Components/MeshComponent.h"
 #include "Materials/MaterialInterface.h"
+#include "Components/AudioComponent.h"
 
 
 // Sets default values
@@ -31,6 +32,13 @@ AGhost::AGhost()
 	damageCollider->SetSphereRadius(150.f);
 	damageCollider->SetCollisionProfileName(TEXT("Trigger"), false);
 
+	idleSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Idle Sound"));
+	idleSound->SetupAttachment(GetRootComponent());
+	idleSound->bAutoActivate = true;
+
+	puffSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Puff Sound"));
+	puffSound->SetupAttachment(GetRootComponent());
+	puffSound->bAutoActivate = false;
 
 	//Timeline
 	TL_Opacity = CreateDefaultSubobject<UTimelineComponent>(TEXT("Change Opacity Animation"));
@@ -101,6 +109,7 @@ void AGhost::setMaterialOpacity(float op)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Opacity: %f"), op);
 	dynamicMaterial->SetScalarParameterValue("Opacity", op);
+	idleSound->SetVolumeMultiplier(op);
 }
 
 
@@ -145,7 +154,9 @@ void AGhost::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedCompon
 	if (Cast<APlayerCharacter>(OtherActor)) {
 		if (ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 			APlayerCharacter* p = Cast<APlayerCharacter>(player);
+			teleportActorAI = true;
 			p->extinguishLamp();
+			puffSound->Play();
 			OnCallBigMonster.Broadcast();
 			aiController->GetBlackboardComponent()->SetValueAsBool("Flee", true);
 		}

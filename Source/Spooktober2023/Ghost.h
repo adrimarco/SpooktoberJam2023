@@ -14,6 +14,7 @@ class USphereComponent;
 class UBoxComponent;
 class AAIController;
 class UTimelineComponent;
+class UAudioComponent;
 
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCallBigMonsterDelegate);
@@ -63,6 +64,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FCallBigMonsterDelegate OnCallBigMonster;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* idleSound{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UAudioComponent* puffSound{ nullptr };
 
 	bool teleportActorAI{ false };
 
