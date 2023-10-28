@@ -129,6 +129,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Class variables
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Score")
+	bool goalCompleted{};
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	int health{};
 

@@ -165,6 +165,7 @@ void APlayerCharacter::BeginPlay()
 
 	//Initialize player health
 	health = MAX_HEALTH;
+	goalCompleted = false;
 
 	FOnTimelineEventStatic finishCallback;
 	finishCallback.BindUFunction(this, FName{ TEXT("endDeadAnimation") });
@@ -556,9 +557,10 @@ void APlayerCharacter::decreaseHealth(int damage)
 	health -= damage;
 
 	if (health <= 0) {
+		// Player dies
 		camera->bUsePawnControlRotation = false;
 		TL_Dead->Play();
-		
+		blockInput = true;
 	}
 }
 
