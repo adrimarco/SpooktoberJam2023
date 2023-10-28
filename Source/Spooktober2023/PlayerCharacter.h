@@ -37,6 +37,12 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMoneyIncreasedDelegate, int, money
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnterSecureZoneDelegate, bool, enter);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerDeadDelegate);
+
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerEndDeadDelegate);
+
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
 {
@@ -61,6 +67,9 @@ public:
 	void UpdateStepsSound();
 	void CheckFloorMaterial();
 	int32 AddPaperOrdered(const PaperMessage& paper);
+
+	UFUNCTION(BlueprintCallable)
+	void setDeadAnimation(const FVector& rot);
 
 	UFUNCTION(BlueprintCallable)
 	void LightLamp(const FInputActionValue& Value);
@@ -100,6 +109,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StopDigging();
 
+	void enterSecureZone(bool enterArea);
+	void decreaseHealth(int damage);
+	void endDeadAnimation();
+
+
+	UFUNCTION(BlueprintCallable)
+	void exitToMenu();
 
 protected:
 	// Called when the game starts or when spawned
@@ -113,6 +129,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	// Class variables
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	int health{};
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Lamp")
 	bool lightOn{ false };
 
@@ -191,6 +210,9 @@ public:
 	UTimelineComponent* TL_TurnLighOn{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTimelineComponent* TL_Dead{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* stepsSound{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
@@ -225,6 +247,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* LightIntensityCurve{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveVector* DeadAnimationCurve{ nullptr };
+
 	// Camera shake
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
 	TSubclassOf<UCameraShakeBase> StaticShake{ nullptr };
@@ -249,7 +274,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FEnterSecureZoneDelegate OnEnterSecureArea;
 
-	void enterSecureZone(bool enterArea);
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FPlayerDeadDelegate OnPlayerDead;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FPlayerEndDeadDelegate OnEndDeadAnimation;
+
+	
 
 	constexpr UStaticMeshComponent* GetLampMesh()	const { return lampMesh; }
 	constexpr UPointLightComponent* GetPointLight()	const { return lampLight; }

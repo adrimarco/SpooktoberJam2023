@@ -23,6 +23,8 @@
 #include "Shovel.h"
 
 
+constexpr auto MAX_HEALTH = 1;
+
 constexpr auto LIGHT_INTENSITY			= 5000.f;
 constexpr auto MIN_LIGHT_INTENSITY		= 100.f;
 constexpr auto LIGHT_ATTENUATION_RADIUS = 3000.f;
@@ -105,6 +107,9 @@ APlayerCharacter::APlayerCharacter()
 
 	// Turn light on/off timeline
 	TL_TurnLighOn = CreateDefaultSubobject<UTimelineComponent>(TEXT("Turn Light On"));
+
+	//Dead timeline
+	TL_Dead = CreateDefaultSubobject<UTimelineComponent>(TEXT("Player Dead Animation"));
 }
 
 // Called when the game starts or when spawned
@@ -144,6 +149,10 @@ void APlayerCharacter::BeginPlay()
 	fcallback.BindUFunction(this, FName{ TEXT("SetLightIntensityFactor") });
 	TL_TurnLighOn->AddInterpFloat(LightIntensityCurve, fcallback);
 
+	FOnTimelineVector vcallback;
+	vcallback.BindUFunction(this, FName{ TEXT("setDeadAnimation") });
+	TL_Dead->AddInterpVector(DeadAnimationCurve, vcallback);
+
 	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
 	stamina = MAX_STAMINA;
 	uiWidgetActive = false;
@@ -153,6 +162,13 @@ void APlayerCharacter::BeginPlay()
 	for (auto i{ 0 }; i < initialPapers.Num(); ++i) {
 		AddPaperOrdered(initialPapers[i]);
 	}
+
+	//Initialize player health
+	health = MAX_HEALTH;
+
+	FOnTimelineEventStatic finishCallback;
+	finishCallback.BindUFunction(this, FName{ TEXT("endDeadAnimation") });
+	TL_Dead->SetTimelineFinishedFunc(finishCallback);
 }
 
 // Called every frame
@@ -358,6 +374,11 @@ int32 APlayerCharacter::AddPaperOrdered(const PaperMessage& paper) {
 	return collectedPapers.Add(paper);;
 }
 
+void APlayerCharacter::setDeadAnimation(const FVector& rot)
+{
+	camera->SetRelativeRotation(FRotator(rot.X, rot.Y, rot.Z));
+}
+
 
 
 void APlayerCharacter::setupStimulusSource()
@@ -528,6 +549,28 @@ void APlayerCharacter::StopDigging() {
 void APlayerCharacter::enterSecureZone(bool enterArea)
 {
 	OnEnterSecureArea.Broadcast(enterArea);
+}
+
+void APlayerCharacter::decreaseHealth(int damage)
+{
+	health -= damage;
+
+	if (health <= 0) {
+		camera->bUsePawnControlRotation = false;
+		TL_Dead->Play();
+		
+	}
+}
+
+void APlayerCharacter::endDeadAnimation()
+{
+	camera->bUsePawnControlRotation = true;
+	OnEndDeadAnimation.Broadcast();
+}
+
+void APlayerCharacter::exitToMenu()
+{
+	OnPlayerDead.Broadcast();
 }
 
 void APlayerCharacter::UpdateStepsSound() {

@@ -37,12 +37,17 @@ public:
 	explicit AGhost_AIController(FObjectInitializer const& objInit);
 	virtual void Tick(float DeltaTime) override;
 
+	void initializeAIController();
+
 	void updateOriginPosition(FVector oPos);
 	UFUNCTION(BlueprintCallable)
 	void teleportActor();
 
 	UFUNCTION(BlueprintCallable)
 	void increaseAngerLevel(float increaseFactor = 0.2);
+
+	UFUNCTION(BlueprintCallable)
+	void startBloodyMoon();
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;

@@ -44,6 +44,8 @@ void AGhost_AIController::Tick(float DeltaTime)
 	//UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevelBB);
 }
 
+
+
 void AGhost_AIController::updateOriginPosition(FVector oPos)
 {
 	originPosition = oPos;
@@ -68,6 +70,23 @@ void AGhost_AIController::increaseAngerLevel(float increaseFactor)
 	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", FMath::Min(angerLevelBB + increaseFactor, 1.f));
 }
 
+void AGhost_AIController::startBloodyMoon()
+{
+	angerLevel = 1.f;
+	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", 1.f);
+	GetBlackboardComponent()->SetValueAsBool("IsBloodyMoon", true);
+}
+
+
+//Initialize ai controller values
+void AGhost_AIController::initializeAIController()
+{
+	GetBlackboardComponent()->SetValueAsBool("IsBloodyMoon", false);
+	angerLevel = 0.f;
+	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", 0.f);
+	teleportActorAI = false;
+}
+
 void AGhost_AIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -83,6 +102,7 @@ void AGhost_AIController::OnPossess(APawn* InPawn)
 			FOnTimelineEventStatic finishCallback;
 			finishCallback.BindUFunction(this, FName{ TEXT("teleportActor") });
 			ghostActor->TL_Opacity->SetTimelineFinishedFunc(finishCallback);
+			initializeAIController();
 			RunBehaviorTree(tree);
 		}
 	}

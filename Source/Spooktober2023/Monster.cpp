@@ -120,10 +120,13 @@ void AMonster::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp
 	if (Cast<APlayerCharacter>(OtherActor)) {
 		if (ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 			APlayerCharacter* p = Cast<APlayerCharacter>(player);
+			
 			//Kill player
+			if (!p->getLampState()) p->decreaseHealth(1);
+			
+			attackSound->Play();
 
 			UE_LOG(LogTemp, Warning, TEXT("Putaso    aaaaaaa"));
-			attackSound->Play();
 		}
 	}
 
