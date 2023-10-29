@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MausoleumDoor.generated.h"
 
-class UText3DComponent;
+class UTextRenderComponent;
 class UTimelineComponent;
 class UCurveFloat;
 
@@ -82,7 +82,7 @@ public:
 	UTimelineComponent* TL_OpenDoor{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UText3DComponent* mausoleumFamiliyText{ nullptr };
+	UTextRenderComponent* mausoleumFamiliyText{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* doorSound{ nullptr };

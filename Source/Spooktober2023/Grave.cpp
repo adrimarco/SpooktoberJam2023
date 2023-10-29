@@ -7,7 +7,7 @@
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveVector.h"
 #include "Components/BoxComponent.h"
-#include "Text3DComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
 
@@ -58,29 +58,17 @@ AGrave::AGrave()
 	boxCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
 	// 3D text
-	deadNameText = CreateDefaultSubobject<UText3DComponent>(TEXT("Dead Name 3DText"));
+	deadNameText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Dead Name Text"));
 	deadNameText->SetupAttachment(graveMesh);
 	deadNameText->SetRelativeLocation(FVector(0.f, 6.376f, 55.65f));
-	deadNameText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+	deadNameText->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 	deadNameText->SetText(FText::FromString("Marco\nRobles"));
-	deadNameText->SetExtrude(10.f);
-	deadNameText->SetHorizontalAlignment(EText3DHorizontalTextAlignment::Center);
-	deadNameText->SetVerticalAlignment(EText3DVerticalTextAlignment::Center);
-	deadNameText->SetHasMaxWidth(true);
-	deadNameText->SetHasMaxHeight(true);
-	deadNameText->SetMaxWidth(300.f);
-	deadNameText->SetMaxHeight(20.f);
+	deadNameText->SetHorizontalAlignment(EHTA_Center);
+	deadNameText->SetVerticalAlignment(EVRTA_TextCenter);
+	deadNameText->SetWorldSize(12.f);
 }
 
 void AGrave::OnConstruction(const FTransform& Transform) {
-	// Set grave name material
-	if (deadNameMaterial != nullptr) {
-		deadNameText->SetFrontMaterial(deadNameMaterial);
-		deadNameText->SetBackMaterial(deadNameMaterial);
-		deadNameText->SetBevelMaterial(deadNameMaterial);
-		deadNameText->SetExtrudeMaterial(deadNameMaterial);
-	}
-
 	// Create child actors
 	if (groundBP == nullptr || coffinBP == nullptr) return;
 

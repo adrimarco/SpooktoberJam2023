@@ -12,7 +12,7 @@ class UTimelineComponent;
 class UCurveFloat;
 class UCurveVector;
 class UBoxComponent;
-class UText3DComponent;
+class UTextRenderComponent;
 class APlayerCharacter;
 
 UCLASS()
@@ -81,7 +81,7 @@ public:
 	UBoxComponent* boxCollision{ nullptr };
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UText3DComponent* deadNameText{ nullptr };
+	UTextRenderComponent* deadNameText{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* digSound{ nullptr };
@@ -102,8 +102,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components Blueprint")
 	TSubclassOf<ACoffin> coffinBP{ nullptr };
-
-	// Grave properties
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Material")
-	UMaterial* deadNameMaterial{ nullptr };
 };
