@@ -74,12 +74,11 @@ UBehaviorTree* AMonster::GetBehaviorTree() const noexcept
 
 int AMonster::MeleeAttack_Implementation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Putaso"));
+	//UE_LOG(LogTemp, Warning, TEXT("Putaso"));
 
 	//Check player collision
 
-	AAIController* aiCont = Cast<AAIController>(GetController());
-	aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+	
 	
 	
 
@@ -125,6 +124,9 @@ void AMonster::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp
 			if (!p->getLampState()) p->decreaseHealth(1);
 			
 			attackSound->Play();
+
+			AAIController* aiCont = Cast<AAIController>(GetController());
+			aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
 
 			UE_LOG(LogTemp, Warning, TEXT("Putaso    aaaaaaa"));
 		}
