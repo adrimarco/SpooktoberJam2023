@@ -26,6 +26,14 @@ void ASecureArea::BeginPlay()
 	
 }
 
+void ASecureArea::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	hitBoxSecureArea->OnComponentBeginOverlap.AddDynamic(this, &ASecureArea::OnCollisionBeginOverlap);
+	hitBoxSecureArea->OnComponentEndOverlap.AddDynamic(this, &ASecureArea::OnCollisionEndOverlap);
+}
+
 // Called every frame
 void ASecureArea::Tick(float DeltaTime)
 {
