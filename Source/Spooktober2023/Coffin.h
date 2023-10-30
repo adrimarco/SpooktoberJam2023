@@ -25,15 +25,6 @@ public:
 	ACoffin();
 
 	UFUNCTION(BlueprintCallable)
-	static void SetJewelsCollection(const TArray<UStaticMesh*>& col);
-
-	UFUNCTION(BlueprintCallable)
-	static void SetEmblemMaterialCollection(const TArray<UMaterialInstance*>& col);
-
-	UFUNCTION(BlueprintCallable)
-	static void ClearJewelsCollection();
-
-	UFUNCTION(BlueprintCallable)
 	void SetOutcomeValue(bool negative);
 
 	UFUNCTION(BlueprintCallable)
@@ -53,9 +44,6 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateMeshes();
-
-	UFUNCTION(BlueprintCallable)
-	static UMaterialInstance* GetEmblemMaterialByIndex(int index);
 
 protected:
 	// Called when the game starts or when spawned
@@ -112,7 +100,4 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FEmblemCollected OnEmblemCollected;
-
-	inline static TArray<UStaticMesh*> jewelsCollection{};
-	inline static TArray<UMaterialInstance*> emblemMaterialsCollection{};
 };

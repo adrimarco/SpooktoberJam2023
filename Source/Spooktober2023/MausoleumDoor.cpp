@@ -181,6 +181,14 @@ void AMausoleumDoor::EmblemFound(int id) {
 	if (id == emblemId) emblemsCollected++;
 }
 
+void AMausoleumDoor::selectEmblemMaterial(int index) {
+	if (emblemsMaterial.IsEmpty()) return;
+
+	index = FMath::Min(index, emblemsMaterial.Num() - 1);
+	emblemMesh->SetMaterial(0, emblemsMaterial[index]);
+	secondEmblemMesh->SetMaterial(0, emblemsMaterial[index]);
+}
+
 void AMausoleumDoor::SetMausoleumName(const FName& newName) {
 	mausoleumName = newName;
 	mausoleumFamiliyText->SetText(FText::FromName(newName));

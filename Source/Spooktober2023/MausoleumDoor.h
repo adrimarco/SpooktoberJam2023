@@ -40,6 +40,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void EmblemFound(int id);
 
+	UFUNCTION(BlueprintCallable)
+	void selectEmblemMaterial(int index);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -92,6 +95,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* PlaceEmblemCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
+	TArray<UMaterialInstance*> emblemsMaterial{ nullptr };
 
 	constexpr int GetMousoleumEmblemId() { return emblemId; };
 };
