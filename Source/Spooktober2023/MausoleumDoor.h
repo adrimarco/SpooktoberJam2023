@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MausoleumDoor.generated.h"
 
-class UText3DComponent;
+class UTextRenderComponent;
 class UTimelineComponent;
 class UCurveFloat;
 
@@ -39,6 +39,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void EmblemFound(int id);
+
+	UFUNCTION(BlueprintCallable)
+	void selectEmblemMaterial(int index);
 
 protected:
 	// Called when the game starts or when spawned
@@ -82,7 +85,7 @@ public:
 	UTimelineComponent* TL_OpenDoor{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
-	UText3DComponent* mausoleumFamiliyText{ nullptr };
+	UTextRenderComponent* mausoleumFamiliyText{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* doorSound{ nullptr };
@@ -92,6 +95,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* PlaceEmblemCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
+	TArray<UMaterialInstance*> emblemsMaterial{ nullptr };
 
 	constexpr int GetMousoleumEmblemId() { return emblemId; };
 };

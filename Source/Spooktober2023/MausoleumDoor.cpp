@@ -2,7 +2,7 @@
 
 
 #include "MausoleumDoor.h"
-#include "Text3DComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Components/AudioComponent.h"
 
@@ -43,16 +43,13 @@ AMausoleumDoor::AMausoleumDoor()
 	secondEmblemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	// 3D Text component
-	mausoleumFamiliyText = CreateDefaultSubobject<UText3DComponent>(TEXT("Mausoleum 3DText"));
+	mausoleumFamiliyText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Mausoleum Text"));
 	mausoleumFamiliyText->SetupAttachment(root);
 	mausoleumFamiliyText->SetRelativeLocation(FVector(-42.5f, -206.f, 490.f));
-	mausoleumFamiliyText->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+	mausoleumFamiliyText->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	mausoleumFamiliyText->SetText(FText::FromString("Sanchez"));
-	mausoleumFamiliyText->SetExtrude(3.f);
-	mausoleumFamiliyText->SetHorizontalAlignment(EText3DHorizontalTextAlignment::Center);
-	mausoleumFamiliyText->SetVerticalAlignment(EText3DVerticalTextAlignment::Center);
-	mausoleumFamiliyText->SetHasMaxWidth(true);
-	mausoleumFamiliyText->SetMaxWidth(300.f);
+	mausoleumFamiliyText->SetHorizontalAlignment(EHorizTextAligment::EHTA_Center);
+	mausoleumFamiliyText->SetVerticalAlignment(EVerticalTextAligment::EVRTA_TextCenter);
 
 	// Audio component
 	doorSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Door Sound"));
@@ -182,6 +179,14 @@ void AMausoleumDoor::UpdateDoorsRotation(float factor) {
 
 void AMausoleumDoor::EmblemFound(int id) {
 	if (id == emblemId) emblemsCollected++;
+}
+
+void AMausoleumDoor::selectEmblemMaterial(int index) {
+	if (emblemsMaterial.IsEmpty()) return;
+
+	index = FMath::Min(index, emblemsMaterial.Num() - 1);
+	emblemMesh->SetMaterial(0, emblemsMaterial[index]);
+	secondEmblemMesh->SetMaterial(0, emblemsMaterial[index]);
 }
 
 void AMausoleumDoor::SetMausoleumName(const FName& newName) {
