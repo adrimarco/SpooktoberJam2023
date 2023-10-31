@@ -30,7 +30,7 @@ AMonster::AMonster()
 	attackCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("Attack collider"));
 	attackCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	attackCollider->SetupAttachment(GetMesh());
-	attackCollider->SetBoxExtent(FVector(50.f, 50.f, 50.f));
+	attackCollider->SetBoxExtent(FVector(70.f, 100.f, 60.f));
 	attackCollider->SetRelativeLocation(FVector(0.f, 100.f, 200.f));
 	attackCollider->SetRelativeRotation(FRotator(0.f, 0.f, 20.f));
 

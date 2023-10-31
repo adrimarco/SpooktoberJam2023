@@ -28,8 +28,9 @@ void AMonster_AIController::Tick(float DeltaTime)
 			if (timerRandom >= TIME_RANGE_SEARCH_PLAYER) {
 				int rand = FMath::RandRange(0, timerLamp);
 				//UE_LOG(LogTemp, Warning, TEXT("Rad: %d"), rand);
-
-				GetBlackboardComponent()->SetValueAsBool("TrackPlayer", rand == 0);
+				
+				if(GetBlackboardComponent()->GetValueAsBool("TrackPlayer"))
+					GetBlackboardComponent()->SetValueAsBool("TrackPlayer", rand == 0);
 				trackPlayer = (rand == 0);
 				timerRandom -= TIME_RANGE_SEARCH_PLAYER;
 				if(timerLamp > 0)
