@@ -57,6 +57,7 @@ void AMonster_AIController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 
 	if (AMonster* const m = Cast<AMonster>(InPawn)) {
+		monsterPawn = m;
 		if (UBehaviorTree* const tree = m->GetBehaviorTree()) {
 			UBlackboardComponent* b;
 			UseBlackboard(tree->BlackboardAsset, b);
@@ -89,6 +90,7 @@ void AMonster_AIController::setupPerceptionSystem()
 void AMonster_AIController::OnTargetDetected(AActor* actor, FAIStimulus const stimulus)
 {
 	if (APlayerCharacter* const ch = Cast<APlayerCharacter>(actor)) {
+		UE_LOG(LogTemp, Warning, TEXT("VISION ASDFASFASF : %f"), stimulus.Strength);
 		GetBlackboardComponent()->SetValueAsBool("CanSeePlayer", stimulus.WasSuccessfullySensed());
 		GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
 	}

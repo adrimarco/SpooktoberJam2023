@@ -9,7 +9,7 @@
 #include "Monster_AIController.generated.h"
 
 
-
+class AMonster;
 /**
  * 
  */
@@ -40,6 +40,7 @@ public:
 	float max_age = 7.f;
 
 	bool trackPlayer = false;
+	AMonster* monsterPawn{ nullptr };
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;

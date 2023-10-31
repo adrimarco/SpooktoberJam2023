@@ -107,7 +107,7 @@ UTimelineComponent* AGhost::getTimelineAnimation()
 
 void AGhost::setMaterialOpacity(float op)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Opacity: %f"), op);
+	//UE_LOG(LogTemp, Warning, TEXT("Opacity: %f"), op);
 	dynamicMaterial->SetScalarParameterValue("Opacity", op);
 	idleSound->SetVolumeMultiplier(op);
 }
