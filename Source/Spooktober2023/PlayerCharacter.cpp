@@ -17,6 +17,7 @@
 #include "Components/AudioComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 // Interaction actors
 #include "Coffin.h"
 #include "Grave.h"
@@ -73,8 +74,6 @@ APlayerCharacter::APlayerCharacter()
 
 	camera->PostProcessSettings = postProcessSettings;
 
-
-
 	//NavMesh modifier collision
 	navmeshModifier = CreateDefaultSubobject<USphereComponent>(TEXT("Navigation Modifier"));
 	navmeshModifier->SetupAttachment(GetCapsuleComponent());
@@ -83,7 +82,7 @@ APlayerCharacter::APlayerCharacter()
 	TSubclassOf< UNavAreaBase > areaNull = UNavArea_Null::StaticClass();
 	navmeshModifier->SetAreaClassOverride(areaNull);
 	navmeshModifier->bFillCollisionUnderneathForNavmesh = true;
-	//navmeshModifier->SetActive(lightOn);
+	navmeshModifier->SetCollisionProfileName(TEXT("NoCollision"), false);
 	
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
@@ -281,7 +280,7 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 	//navmeshModifier->bDynamicObstacle = lightOn;
 	navmeshModifier->SetSphereRadius(lightOn?200.f:0.1);
 	//navmeshModifier->SetActive(lightOn);
-
+	
 	// Play sound
 	lampSound->SetBoolParameter("TurnOn", true);
 	lampSound->Play();
@@ -319,9 +318,13 @@ void APlayerCharacter::extinguishLamp(float time)
 	// Prevent lighting it again
 	blockLamp = true;
 
+	// If light was already extinguished, clears timer
+	auto& timerManager{ GetWorldTimerManager() };
+	if (timerManager.IsTimerActive(extinguishedLightHandle))
+		timerManager.ClearTimer(extinguishedLightHandle);
+
 	// Set timer for recovering light
-	FTimerHandle tHandle;
-	GetWorldTimerManager().SetTimer(tHandle, this, &APlayerCharacter::igniteLamp, time, false, time);
+	timerManager.SetTimer(extinguishedLightHandle, this, &APlayerCharacter::igniteLamp, time, false, time);
 }
 
 void APlayerCharacter::igniteLamp() {
@@ -521,6 +524,7 @@ void APlayerCharacter::ClosePaper() {
 			blockInput = false;
 
 		paperWidget = nullptr;
+		UGameplayStatics::SetGamePaused(GetWorld(), false);
 	}
 }
 

@@ -201,6 +201,7 @@ public:
 	AActor* interactingWith{ nullptr };
 	TArray<int> collectedEmblems;
 	FTimerHandle stepsSoundHandle;
+	FTimerHandle extinguishedLightHandle;
 
 	// Components
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
