@@ -22,7 +22,7 @@ class SPOOKTOBER2023_API AGhost_AIController : public AAIController
 
 
 	float timerAnger{0.f};
-	float MAX_TIMER_ANGER{5.f};
+	float MAX_TIMER_ANGER{2.f};
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI", meta = (AllowPrivateAccess = "true"))

@@ -61,6 +61,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Anger Level", meta = (AllowPrivateAccess = "true"))
 	float speed{ minSpeed };
 
+	bool collidePlayerOnce{ true };
+
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FCallBigMonsterDelegate OnCallBigMonster;
 

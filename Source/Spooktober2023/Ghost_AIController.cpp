@@ -21,27 +21,33 @@ void AGhost_AIController::Tick(float DeltaTime)
 		APlayerCharacter const* p = Cast<APlayerCharacter>(player);
 		lampState = p->getLampState();
 		GetBlackboardComponent()->SetValueAsBool("LampState", lampState);
-	}
-	if (IsInsideRadius) {
-		if (timerAnger >= MAX_TIMER_ANGER) {
-			if (lampState) {
-				angerLevelBB += DeltaTime;
-				angerLevel = (angerLevelBB = FMath::Min(angerLevelBB, 1.f));
-				
+
+		if (IsInsideRadius) {
+			if (timerAnger >= MAX_TIMER_ANGER) {
+				if (lampState) {
+					angerLevelBB += MAX_TIMER_ANGER/10;
+					angerLevel = (angerLevelBB = FMath::Min(angerLevelBB, 1.f));
+
+				}
+
+				timerAnger -= MAX_TIMER_ANGER;
 			}
-			
-			timerAnger = 0.f;
+			timerAnger += DeltaTime;
+		}
+
+		GetBlackboardComponent()->SetValueAsFloat("AngerLevel", angerLevelBB);
+		ghostActor->setSphereCollisionRadius(FMath::Lerp(ghostActor->minSightRadius, ghostActor->maxSightRadius, angerLevelBB));
+
+		
+		if ((IsInsideRadius && lampState)) {
+			ghostActor->setSpeedGhost(FMath::Lerp(ghostActor->minSpeed, ghostActor->maxSpeed, angerLevelBB));
 		}
 		else {
-			timerAnger = FMath::Clamp(timerAnger + DeltaTime, 0.f, MAX_TIMER_ANGER);
+			if (ghostActor->speed > ghostActor->wanderSpeed) {
+				ghostActor->setSpeedGhost(FMath::Max(ghostActor->speed - DeltaTime * 100, ghostActor->wanderSpeed));
+			}
 		}
-	}
-
-	GetBlackboardComponent()->SetValueAsFloat("AngerLevel", angerLevelBB);
-	ghostActor->setSphereCollisionRadius(FMath::Lerp(ghostActor->minSightRadius, ghostActor->maxSightRadius, angerLevelBB));
-	float maxSpeed = (IsInsideRadius) ? ghostActor->maxSpeed : FMath::Min(ghostActor->speed, ghostActor->wanderSpeed);
-	ghostActor->setSpeedGhost(FMath::Lerp(ghostActor->minSpeed, maxSpeed, angerLevelBB));
-	//UE_LOG(LogTemp, Warning, TEXT("Anger Level: %f"), angerLevelBB);
+	} 
 }
 
 
@@ -56,12 +62,11 @@ void AGhost_AIController::teleportActor() {
 
 	if (ghostActor->teleportActorAI) {
 		ghostActor->teleportActorAI = false;
+		ghostActor->collidePlayerOnce = true;
 		FVector target = GetBlackboardComponent()->GetValueAsVector("OriginPosition");
 		ghostActor->SetActorLocation(target);
 		ghostActor->TL_Opacity->Reverse();
-		//ghostActor->TL_Opacity->SetPlaybackPosition(0.f, false);
 	}
-	
 }
 
 void AGhost_AIController::increaseAngerLevel(float increaseFactor)
