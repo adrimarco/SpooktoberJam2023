@@ -569,6 +569,10 @@ void APlayerCharacter::StopDigging() {
 	StopInteract();
 }
 
+void APlayerCharacter::GraveAreaEntered(AGrave* grave) {
+	OnGraveAreaEntered.Broadcast(grave);
+}
+
 
 void APlayerCharacter::enterSecureZone(bool enterArea)
 {

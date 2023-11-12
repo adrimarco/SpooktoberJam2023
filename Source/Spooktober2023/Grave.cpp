@@ -174,8 +174,12 @@ void AGrave::SetDeadName(const FName& name) {
 void AGrave::OnEnterGraveArea(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
 	if (registeredInMap || not OtherActor->IsA<APlayerCharacter>()) return;
 
+	// Prevent from triggering again
+	registeredInMap = true;
+	sphereTrigger->Deactivate();
+
+	// Get player and notify
 	player = Cast<APlayerCharacter>(OtherActor);
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Your Message"));
-	registeredInMap = true;
+	player->GraveAreaEntered(this);
 }

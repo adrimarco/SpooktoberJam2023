@@ -40,6 +40,9 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnterSecureZoneDelegate, bool, enter);
 
 UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGraveAreaEnteredDelegate, AGrave*, graveActor);
+
+UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerDeadDelegate);
 
 UDELEGATE()
@@ -110,6 +113,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void StopDigging();
+
+	UFUNCTION(BlueprintCallable)
+	void GraveAreaEntered(AGrave* grave);
 
 	void enterSecureZone(bool enterArea);
 	void decreaseHealth(int damage);
@@ -287,6 +293,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FPlayerEndDeadDelegate OnEndDeadAnimation;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FGraveAreaEnteredDelegate OnGraveAreaEntered;
 
 	
 
