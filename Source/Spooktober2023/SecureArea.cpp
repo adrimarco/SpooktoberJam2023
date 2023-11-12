@@ -4,7 +4,8 @@
 #include "SecureArea.h"
 #include "Components/BoxComponent.h"
 #include "PlayerCharacter.h"
-
+#include "Components/StaticMeshComponent.h"
+#include "NavAreas/NavArea_Null.h"
 
 // Sets default values
 ASecureArea::ASecureArea()
@@ -16,13 +17,27 @@ ASecureArea::ASecureArea()
 	hitBoxSecureArea->SetGenerateOverlapEvents(true);
 	hitBoxSecureArea->SetBoxExtent(FVector{10.0, 10.0 , 10.0});
 	hitBoxSecureArea->SetCollisionProfileName(TEXT("Trigger"), false);
+	hitBoxSecureArea->bNavigationRelevant = true;
+	hitBoxSecureArea->SetCanEverAffectNavigation(true);
 
+
+	hitBoxSecureArea->bDynamicObstacle = true;
+	TSubclassOf< UNavAreaBase > areaNull = UNavArea_Null::StaticClass();
+	hitBoxSecureArea->SetAreaClassOverride(areaNull);
+	hitBoxSecureArea->bFillCollisionUnderneathForNavmesh = true;
+
+	/*navModifier = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("NavModi"));
+	navModifier->SetupAttachment(RootComponent, NAME_None);*/
+
+	//navModifier = CreateDefaultSubobject<UNavModifierComponent>(TEXT("NavMod"));
+	//navModifier->AddToRoot();
 }
 
 // Called when the game starts or when spawned
 void ASecureArea::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 }
 

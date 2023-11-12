@@ -8,6 +8,8 @@
 #include "Components/CapsuleComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/TimelineComponent.h"
+#include "Components/SphereComponent.h"
+#include "NavAreas/NavArea_Null.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Perception/AISense_Sight.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -23,7 +25,7 @@
 #include "Shovel.h"
 
 
-constexpr auto MAX_HEALTH = 1;
+constexpr auto MAX_HEALTH = 3;
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
 constexpr auto MIN_LIGHT_INTENSITY		= 100.f;
@@ -71,6 +73,18 @@ APlayerCharacter::APlayerCharacter()
 
 	camera->PostProcessSettings = postProcessSettings;
 
+
+
+	//NavMesh modifier collision
+	navmeshModifier = CreateDefaultSubobject<USphereComponent>(TEXT("Navigation Modifier"));
+	navmeshModifier->SetupAttachment(GetCapsuleComponent());
+	navmeshModifier->SetSphereRadius(0.01);
+	navmeshModifier->bDynamicObstacle = true;
+	TSubclassOf< UNavAreaBase > areaNull = UNavArea_Null::StaticClass();
+	navmeshModifier->SetAreaClassOverride(areaNull);
+	navmeshModifier->bFillCollisionUnderneathForNavmesh = true;
+	//navmeshModifier->SetActive(lightOn);
+	
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
 	lampMesh->SetupAttachment(GetCapsuleComponent());
@@ -264,6 +278,10 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 
 	lightOn = not lightOn;
 
+	//navmeshModifier->bDynamicObstacle = lightOn;
+	navmeshModifier->SetSphereRadius(lightOn?200.f:0.1);
+	//navmeshModifier->SetActive(lightOn);
+
 	// Play sound
 	lampSound->SetBoolParameter("TurnOn", true);
 	lampSound->Play();
@@ -283,6 +301,11 @@ void APlayerCharacter::extinguishLamp(float time)
 {
 	// Turn off lamp
 	lightOn = false;
+
+	//navmeshModifier->bDynamicObstacle = lightOn;
+	navmeshModifier->SetSphereRadius(0.1);
+	//navmeshModifier->SetActive(lightOn);
+
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
 	lampLight->SetIntensity(0.f);
 

@@ -19,6 +19,8 @@ class UUserWidget;
 class AShovel;
 class UNiagaraSystem;
 class UNiagaraComponent;
+class USphereComponent;
+
 
 struct PaperMessage {
 	FText message;
@@ -208,6 +210,9 @@ public:
 	UNiagaraSystem* lampFireParticles;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UNiagaraComponent* niagaraComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	USphereComponent* navmeshModifier{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_TurnLighOn{ nullptr };
