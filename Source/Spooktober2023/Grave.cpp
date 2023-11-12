@@ -7,6 +7,7 @@
 #include "Components/TimelineComponent.h"
 #include "Curves/CurveVector.h"
 #include "Components/BoxComponent.h"
+#include "Components/SphereComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "Components/AudioComponent.h"
 #include "PlayerCharacter.h"
@@ -57,6 +58,13 @@ AGrave::AGrave()
 	boxCollision->SetCollisionResponseToAllChannels(ECR_Block);
 	boxCollision->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 
+	// Sphere trigger
+	sphereTrigger = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere trigger"));
+	sphereTrigger->SetupAttachment(GetRootComponent());
+	sphereTrigger->SetGenerateOverlapEvents(true);
+	sphereTrigger->SetSphereRadius(700.f);
+	sphereTrigger->SetCollisionProfileName(TEXT("Trigger"), false);
+
 	// 3D text
 	deadNameText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Dead Name Text"));
 	deadNameText->SetupAttachment(graveMesh);
@@ -76,6 +84,13 @@ void AGrave::OnConstruction(const FTransform& Transform) {
 	coffinActor->SetChildActorClass(coffinBP);
 }
 
+void AGrave::PostInitializeComponents() {
+	Super::PostInitializeComponents();
+
+	// Bind trigger events
+	sphereTrigger->OnComponentBeginOverlap.AddDynamic(this, &AGrave::OnEnterGraveArea);
+}
+
 // Called when the game starts or when spawned
 void AGrave::BeginPlay()
 {
@@ -85,6 +100,8 @@ void AGrave::BeginPlay()
 		Destroy();
 		return;
 	}
+
+	registeredInMap = false;
 	
 	// Timeline binding functions
 	FOnTimelineFloat fcallback;
@@ -152,4 +169,13 @@ void AGrave::FinishDigging() {
 void AGrave::SetDeadName(const FName& name) {
 	deadName = name;
 	deadNameText->SetText(FText::FromName(name));
+}
+
+void AGrave::OnEnterGraveArea(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) {
+	if (registeredInMap || not OtherActor->IsA<APlayerCharacter>()) return;
+
+	player = Cast<APlayerCharacter>(OtherActor);
+
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("Your Message"));
+	registeredInMap = true;
 }

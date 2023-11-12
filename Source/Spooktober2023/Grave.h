@@ -14,6 +14,7 @@ class UCurveVector;
 class UBoxComponent;
 class UTextRenderComponent;
 class APlayerCharacter;
+class USphereComponent;
 
 UCLASS()
 class SPOOKTOBER2023_API AGrave : public AActor
@@ -39,11 +40,16 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetDeadName(const FName& name);
 
+	UFUNCTION()
+	void OnEnterGraveArea(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	virtual void PostInitializeComponents() override;
 
 public:	
 	// Called every frame
@@ -61,6 +67,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grave State")
 	bool looted{ false };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grave State")
+	bool registeredInMap{ false };
 
 	APlayerCharacter* player{ nullptr };
 
@@ -85,6 +94,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* digSound{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	USphereComponent* sphereTrigger{nullptr};
 
 	// Timeline curves
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
