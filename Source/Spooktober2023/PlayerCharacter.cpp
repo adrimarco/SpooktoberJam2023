@@ -18,6 +18,11 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "Kismet/GameplayStatics.h"
+
+#include "Monster.h"
+#include "AIController.h"
+#include "BehaviorTree/BlackboardComponent.h"
+
 // Interaction actors
 #include "Coffin.h"
 #include "Grave.h"
@@ -77,12 +82,8 @@ APlayerCharacter::APlayerCharacter()
 	//NavMesh modifier collision
 	navmeshModifier = CreateDefaultSubobject<USphereComponent>(TEXT("Navigation Modifier"));
 	navmeshModifier->SetupAttachment(GetCapsuleComponent());
-	navmeshModifier->SetSphereRadius(0.01);
-	navmeshModifier->bDynamicObstacle = true;
-	TSubclassOf< UNavAreaBase > areaNull = UNavArea_Null::StaticClass();
-	navmeshModifier->SetAreaClassOverride(areaNull);
-	navmeshModifier->bFillCollisionUnderneathForNavmesh = true;
-	navmeshModifier->SetCollisionProfileName(TEXT("NoCollision"), false);
+	navmeshModifier->SetSphereRadius(200.f);
+	navmeshModifier->Deactivate();
 	
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
@@ -185,6 +186,13 @@ void APlayerCharacter::BeginPlay()
 	TL_Dead->SetTimelineFinishedFunc(finishCallback);
 }
 
+void APlayerCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	navmeshModifier->OnComponentBeginOverlap.AddDynamic(this, &APlayerCharacter::OnCollisionBeginOverlap);
+	navmeshModifier->OnComponentEndOverlap.AddDynamic(this, &APlayerCharacter::OnCollisionEndOverlap);
+}
+
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
 {
@@ -234,6 +242,21 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 }
 
+void APlayerCharacter::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (AMonster* mons = Cast<AMonster>(OtherActor)) {
+		if (lightOn) {
+			AAIController* aiCont = Cast<AAIController>(mons->GetController());
+			aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+		}
+	}
+}
+
+void APlayerCharacter::OnCollisionEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+
+}
+
 void APlayerCharacter::Move(const FInputActionValue& Value) {
 	// Check player has a controller or movement is disabled
 	if (Controller == nullptr || blockInput || blockMovement) return;
@@ -277,9 +300,7 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 
 	lightOn = not lightOn;
 
-	//navmeshModifier->bDynamicObstacle = lightOn;
-	navmeshModifier->SetSphereRadius(lightOn?200.f:0.1);
-	//navmeshModifier->SetActive(lightOn);
+	navmeshModifier->Activate();
 	
 	// Play sound
 	lampSound->SetBoolParameter("TurnOn", true);
@@ -301,9 +322,7 @@ void APlayerCharacter::extinguishLamp(float time)
 	// Turn off lamp
 	lightOn = false;
 
-	//navmeshModifier->bDynamicObstacle = lightOn;
-	navmeshModifier->SetSphereRadius(0.1);
-	//navmeshModifier->SetActive(lightOn);
+	navmeshModifier->Deactivate();
 
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
 	lampLight->SetIntensity(0.f);

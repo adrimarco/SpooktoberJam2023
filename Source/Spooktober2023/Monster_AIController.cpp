@@ -19,6 +19,21 @@ AMonster_AIController::AMonster_AIController(FObjectInitializer const& objInit)
 
 void AMonster_AIController::Tick(float DeltaTime)
 {
+	//Timer to reset flee
+	bool attackS = GetBlackboardComponent()->GetValueAsBool("attackSuccess");
+
+	if (attackS) {
+		if (timerResetFlee > Max_timerResetFlee) {
+			GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
+			timerResetFlee -= DeltaTime;
+		}
+		timerResetFlee += DeltaTime;
+	}
+	else {
+		timerResetFlee = 0.f;
+	}
+
 	if (ACharacter* const player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 		APlayerCharacter const* p = Cast<APlayerCharacter>(player);
 		lampState = p->getLampState();

@@ -42,6 +42,11 @@ public:
 	bool trackPlayer = false;
 	AMonster* monsterPawn{ nullptr };
 
+
+	//Timer flee
+	float timerResetFlee{ 0.f };
+	float Max_timerResetFlee{ 30.f };
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 
