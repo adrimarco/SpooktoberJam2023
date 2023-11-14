@@ -21,8 +21,9 @@ void AMonster_AIController::Tick(float DeltaTime)
 {
 	//Timer to reset flee
 	bool attackS = GetBlackboardComponent()->GetValueAsBool("attackSuccess");
+	bool insideSecureArea = GetBlackboardComponent()->GetValueAsBool("PlayerInsideSecureArea");
 
-	if (attackS) {
+	if (attackS && not insideSecureArea) {
 		if (timerResetFlee > Max_timerResetFlee) {
 			GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
 			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
