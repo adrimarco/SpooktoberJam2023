@@ -27,6 +27,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	USpotLightComponent* lampLight{ nullptr };
 
+	bool CanHitPlayer{ true };
+
 	// Sets default values for this character's properties
 	AMonster();
 

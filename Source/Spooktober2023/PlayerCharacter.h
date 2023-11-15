@@ -31,6 +31,9 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPaperCollectedDelegate, FText, paperText);
 
 UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerDamagedDelegate, int, remainingLives);
+
+UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEmblemCollectedDelegate, int, emblemId);
 
 UDELEGATE()
@@ -297,6 +300,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FGraveAreaEnteredDelegate OnGraveAreaEntered;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FPlayerDamagedDelegate OnPlayerDamaged;
 
 	
 

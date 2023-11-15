@@ -92,6 +92,9 @@ void AMonster::activateAttackCollision(bool activate) {
 	else collisionState = ECollisionEnabled::NoCollision;
 
 	attackCollider->SetCollisionEnabled(collisionState);
+
+	// Allow to hit player
+	CanHitPlayer = true;
 }
 
 void AMonster::playerEnteredSecureArea(bool playerEntered)
@@ -116,7 +119,7 @@ void AMonster::playerEnteredSecureArea(bool playerEntered)
 
 void AMonster::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (Cast<APlayerCharacter>(OtherActor)) {
+	if (CanHitPlayer && Cast<APlayerCharacter>(OtherActor)) {
 		if (ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0)) {
 			APlayerCharacter* p = Cast<APlayerCharacter>(player);
 			
@@ -128,7 +131,8 @@ void AMonster::OnAttackCollisionBeginOverlap(UPrimitiveComponent* OverlappedComp
 			AAIController* aiCont = Cast<AAIController>(GetController());
 			aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
 
-			UE_LOG(LogTemp, Warning, TEXT("Putaso    aaaaaaa"));
+			// Prevent from hitting several times
+			CanHitPlayer = false;
 		}
 	}
 

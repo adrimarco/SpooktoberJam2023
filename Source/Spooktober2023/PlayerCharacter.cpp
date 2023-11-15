@@ -585,8 +585,13 @@ void APlayerCharacter::enterSecureZone(bool enterArea)
 
 void APlayerCharacter::decreaseHealth(int damage)
 {
+	// Reduce life
 	health -= damage;
 
+	// Notify damage
+	OnPlayerDamaged.Broadcast(health);
+
+	// Check if player still has lives
 	if (health <= 0) {
 		// Player dies
 		camera->bUsePawnControlRotation = false;

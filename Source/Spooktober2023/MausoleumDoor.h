@@ -10,6 +10,9 @@ class UTextRenderComponent;
 class UTimelineComponent;
 class UCurveFloat;
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEmblemRequiredDelegate);
+
 UCLASS()
 class SPOOKTOBER2023_API AMausoleumDoor : public AActor
 {
@@ -98,6 +101,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meshes")
 	TArray<UMaterialInstance*> emblemsMaterial{ nullptr };
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FEmblemRequiredDelegate OnEmblemRequired;
 
 	constexpr int GetMousoleumEmblemId() { return emblemId; };
 };
