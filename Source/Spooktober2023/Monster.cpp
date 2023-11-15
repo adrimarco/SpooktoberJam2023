@@ -104,6 +104,7 @@ void AMonster::playerEnteredSecureArea(bool playerEntered)
 		aiCont->GetBlackboardComponent()->SetValueAsBool("LampState", true);
 		aiCont->GetBlackboardComponent()->SetValueAsBool("TrackPlayer", false);
 		aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+		aiCont->GetBlackboardComponent()->SetValueAsBool("PlayerInsideSecureArea", true);
 	}
 	else {
 
@@ -113,6 +114,7 @@ void AMonster::playerEnteredSecureArea(bool playerEntered)
 		}
 		
 		aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
+		aiCont->GetBlackboardComponent()->SetValueAsBool("PlayerInsideSecureArea", false);
 	}
 }
 
