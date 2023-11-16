@@ -121,6 +121,8 @@ public:
 	void GraveAreaEntered(AGrave* grave);
 
 	void enterSecureZone(bool enterArea);
+
+	UFUNCTION(BlueprintCallable)
 	void decreaseHealth(int damage);
 	void endDeadAnimation();
 
