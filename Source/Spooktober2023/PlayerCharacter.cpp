@@ -46,6 +46,8 @@ constexpr auto RUN_SPEED				= 800.f;
 constexpr auto INTERACTION_DISTANCE		= 300.f;
 constexpr auto INTERACTING_CAMERA_SLOW	= 0.15f;
 constexpr auto INTERACTING_CAM_MOV_LIMIT= 0.4f;
+constexpr auto CHARM_FINAL_Z			= 50.f;
+constexpr auto CHARM_INIT_Z				= 30.f;
 TArray<PaperMessage> initialPapers = {	{FText::FromString("So, are you determined to go to the cemetery? Is that the only thing you can think of? I don't intend to judge you; everyone does what they can to move forward. I'll just offer you a piece of advice. Meddling in the affairs of the dead can be dangerous. Disturbing troubled, malevolent, or unhappy souls comes with its risks. You should think carefully about whom you're looting, although it's impossible to do so without knowing who they were. I wish you the best of luck; you're going to need it."), 
 										"Rest in peace?"},
 										{FText::FromString("I don't know what reasons you have for venturing into the forest of the dead on the night before All Saints' Day, but I don't believe it's a sensible idea. I must warn you in case you're not aware of what you're about to do. They say that on October 31st, in the dead of night, the sky turns red, the souls of the departed wander our world once again, and their secrets come to light. I suppose you may not believe in such nonsense, but I'd carry a lantern. Some claim it can protect you from the spirits, although others insist just the opposite."),
@@ -110,7 +112,7 @@ APlayerCharacter::APlayerCharacter()
 	// Charm mesh
 	charmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Charm Mesh"));
 	charmMesh->SetupAttachment(GetCapsuleComponent());
-	charmMesh->SetRelativeLocation(FVector(25.f, 18.f, 50.f));
+	charmMesh->SetRelativeLocation(FVector(25.f, 12.f, 50.f));
 	charmMesh->SetRelativeRotation(FRotator(-3.5f, 110.f, -9.7f));
 
 	// Audio components
@@ -156,7 +158,7 @@ void APlayerCharacter::BeginPlay()
 	lampLight->SetIntensity(lightOn ? lightIntensity : MIN_LIGHT_INTENSITY);
 	lampLight->SetAttenuationRadius(lightOn ? LIGHT_ATTENUATION_RADIUS : MIN_ATTENUATION_RADIUS);
 
-	charmMesh->SetVisibility(false);
+	HideCharm();
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
@@ -185,6 +187,14 @@ void APlayerCharacter::BeginPlay()
 	fcallback.Unbind();
 	fcallback.BindUFunction(this, FName{ TEXT("UpdateRotationWhileFocusCharm") });
 	TL_FocusCharm->AddInterpFloat(FocusCharmCurve, fcallback);
+
+	fcallback.Unbind();
+	fcallback.BindUFunction(this, FName{ TEXT("SetCameraFOV") });
+	TL_FocusCharm->AddInterpFloat(FocusCharmCameraFovCurve, fcallback);
+
+	fcallback.Unbind();
+	fcallback.BindUFunction(this, FName{ TEXT("SetCharmMeshPosition") });
+	TL_FocusCharm->AddInterpFloat(FocusCharmZPositionCurve, fcallback);
 
 	// Bind timeline finish functions
 	FOnTimelineEventStatic finishCallback;
@@ -267,8 +277,11 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 			EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ClosePaper);
 
 		// Charm
-		if (CharmAction)
+		if (CharmAction) {
 			EnhancedInputComponent->BindAction(CharmAction, ETriggerEvent::Triggered, this, &APlayerCharacter::RequestCharmEffect);
+			EnhancedInputComponent->BindAction(CharmAction, ETriggerEvent::Ongoing, this, &APlayerCharacter::RiseCharm);
+			EnhancedInputComponent->BindAction(CharmAction, ETriggerEvent::Canceled, this, &APlayerCharacter::HideCharm);
+		}
 	}
 
 }
@@ -451,6 +464,10 @@ void APlayerCharacter::UpdateCharm(float time) {
 	if (charmCooldown > 0.f) charmCooldown -= time;
 }
 
+bool APlayerCharacter::IsCharmAvailable() {
+	return charmCooldown <= 0.f && not uiWidgetActive;
+}
+
 int32 APlayerCharacter::AddPaperOrdered(const PaperMessage& paper) {
 	for (int32 i{ 0 }; i < collectedPapers.Num(); ++i) {
 		if (paper.title.Compare(collectedPapers[i].title) < 0) {
@@ -546,9 +563,35 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 
 void APlayerCharacter::RequestCharmEffect(const FInputActionValue& Value = {}) {
 	// Check charm is not on cooldown and player is not using inventory
-	if (charmCooldown > 0.f || uiWidgetActive) return;
+	if (not IsCharmAvailable()) return;
 
 	OnCharm.Broadcast();
+}
+
+void APlayerCharacter::RiseCharm(const FInputActionInstance& Value) {
+	// Check charm is available
+	if (not IsCharmAvailable()) return;
+
+	// Check charm is not being used
+	if (Value.GetTriggeredTime() > 0.f) return;
+
+	auto triggers{ Value.GetTriggers() };
+
+	for (auto i{ 0 }; i < triggers.Num(); ++i) {
+		if (triggers[i]->IsA<UInputTriggerHold>()) {
+			float totalHoldTime{ Cast<UInputTriggerHold>(Value.GetTriggers()[i])->HoldTimeThreshold };
+			float currentHoldTime{ Value.GetElapsedTime() };
+
+			// Update charm position
+			SetCharmMeshPosition(currentHoldTime / totalHoldTime);
+
+			break;
+		}
+	}
+}
+
+void APlayerCharacter::HideCharm(const FInputActionInstance&) {
+	SetCharmMeshPosition(-1.f);
 }
 
 void APlayerCharacter::StopInteract(const FInputActionValue& Value = {}) {
@@ -691,7 +734,7 @@ void APlayerCharacter::endDeadAnimation()
 
 void APlayerCharacter::UseCharm(bool objectiveFound, FVector location) {
 	// Check can use charm
-	if (charmCooldown > 0.f || uiWidgetActive || not objectiveFound) return;
+	if (not IsCharmAvailable() || not objectiveFound) return;
 
 	// Calculate objetive rotation
 	objectiveRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), location);
@@ -699,7 +742,6 @@ void APlayerCharacter::UseCharm(bool objectiveFound, FVector location) {
 	// Block input and play animation
 	blockInput = true;
 	TL_FocusCharm->PlayFromStart();
-	charmMesh->SetVisibility(true);
 
 	// Starts cooldown
 	charmCooldown = CHARM_COOLDOWN_TIME;
@@ -708,11 +750,27 @@ void APlayerCharacter::UseCharm(bool objectiveFound, FVector location) {
 void APlayerCharacter::EndCharmEffect() {
 	// Enable input again
 	blockInput = false;
-	charmMesh->SetVisibility(false);
 }
 
 void APlayerCharacter::ResetCharmCooldown() {
 	charmCooldown = 0.f;
+}
+
+void APlayerCharacter::SetCharmMeshPosition(float factor) {
+	if (factor <= 0.f) {
+		// Hides charm
+		charmMesh->SetVisibility(false);
+		return;
+	}
+
+	// Update position
+	auto location{ charmMesh->GetRelativeLocation() };
+	location.Z = FMath::Lerp(CHARM_INIT_Z, CHARM_FINAL_Z, FMath::Clamp(factor, 0.f, 1.f));
+
+	charmMesh->SetRelativeLocation(location);
+
+	// Show charm
+	charmMesh->SetVisibility(true);
 }
 
 void APlayerCharacter::UpdateRotationWhileFocusCharm(float factor) {
@@ -722,6 +780,10 @@ void APlayerCharacter::UpdateRotationWhileFocusCharm(float factor) {
 	FRotator newRotation{ FMath::Lerp(GetActorRotation(), objectiveRotation, factor)};
 	
 	GetController()->SetControlRotation(newRotation);
+}
+
+void APlayerCharacter::SetCameraFOV(const float& fov) {
+	camera->SetFieldOfView(FMath::Clamp(fov, 5.f, 300.f));
 }
 
 void APlayerCharacter::exitToMenu()

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "InputActionValue.h"
+#include "InputAction.h"
 #include "PlayerCharacter.generated.h"
 
 class UStaticMeshComponent;
@@ -72,10 +72,13 @@ public:
 	void StopSprint(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
 	void RequestCharmEffect(const FInputActionValue& Value);
+	void RiseCharm(const FInputActionInstance& Value);
+	void HideCharm(const FInputActionInstance& Value = {});
 	void StopInteract(const FInputActionValue& Value);
 	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
 	void UpdateCharm(float time);
+	bool IsCharmAvailable();
 	void PlayStepsSound();
 	void UpdateStepsSound();
 	void CheckFloorMaterial();
@@ -141,7 +144,13 @@ public:
 	void ResetCharmCooldown();
 
 	UFUNCTION(BlueprintCallable)
+	void SetCharmMeshPosition(float factor);
+
+	UFUNCTION(BlueprintCallable)
 	void UpdateRotationWhileFocusCharm(float factor);
+
+	UFUNCTION(BlueprintCallable)
+	void SetCameraFOV(const float& fov);
 
 	UFUNCTION(BlueprintCallable)
 	void exitToMenu();
@@ -309,6 +318,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* FocusCharmCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveFloat* FocusCharmCameraFovCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveFloat* FocusCharmZPositionCurve{ nullptr };
 
 	// Camera shake
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
