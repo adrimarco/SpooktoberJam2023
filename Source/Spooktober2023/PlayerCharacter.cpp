@@ -34,8 +34,9 @@
 constexpr auto MAX_HEALTH = 3;
 
 constexpr auto LIGHT_INTENSITY			= 5000.f;
-constexpr auto MIN_LIGHT_INTENSITY		= 100.f;
-constexpr auto LIGHT_ATTENUATION_RADIUS = 3000.f;
+constexpr auto MIN_LIGHT_INTENSITY		= 500.f;
+constexpr auto LIGHT_ATTENUATION_RADIUS = 4000.f;
+constexpr auto MIN_ATTENUATION_RADIUS	= 2000.f;
 constexpr auto MAX_STAMINA				= 10.f;
 constexpr auto MIN_RUN_STAMINA			= 5.f;
 constexpr auto STAMINA_RECOVER_RATE		= 0.8f;
@@ -88,7 +89,7 @@ APlayerCharacter::APlayerCharacter()
 	// Lamp mesh
 	lampMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Lamp"));
 	lampMesh->SetupAttachment(GetCapsuleComponent());
-	lampMesh->SetRelativeLocation(FVector(23.8f, -18.f, 40.f));
+	lampMesh->SetRelativeLocation(FVector(25.f, -18.f, 40.f));
 	lampMesh->SetRelativeRotation(FRotator(-3.5f, 70.f, -9.7f));
 
 	// Lamp light
@@ -142,6 +143,7 @@ void APlayerCharacter::BeginPlay()
 
 	// Initial light state
 	lampLight->SetIntensity(lightOn ? lightIntensity : MIN_LIGHT_INTENSITY);
+	lampLight->SetAttenuationRadius(lightOn ? LIGHT_ATTENUATION_RADIUS : MIN_ATTENUATION_RADIUS);
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
@@ -300,7 +302,9 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 
 	lightOn = not lightOn;
 
-	navmeshModifier->Activate();
+	// Control area that protects player from monster
+	if (lightOn)	navmeshModifier->Activate();
+	else			navmeshModifier->Deactivate();
 	
 	// Play sound
 	lampSound->SetBoolParameter("TurnOn", true);
@@ -308,11 +312,11 @@ void APlayerCharacter::LightLamp(const FInputActionValue& Value = {}) {
 
 	// Play animation
 	if (lightOn) { 
-		TL_TurnLighOn->Play(); 
+		TL_TurnLighOn->PlayFromStart(); 
 		niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.2); 
 	}
 	else { 
-		TL_TurnLighOn->Reverse(); 
+		TL_TurnLighOn->ReverseFromEnd(); 
 		niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
 	}
 }
@@ -324,6 +328,7 @@ void APlayerCharacter::extinguishLamp(float time)
 
 	navmeshModifier->Deactivate();
 
+	if (TL_TurnLighOn->IsPlaying()) TL_TurnLighOn->Stop();
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
 	lampLight->SetIntensity(0.f);
 
@@ -349,12 +354,15 @@ void APlayerCharacter::extinguishLamp(float time)
 void APlayerCharacter::igniteLamp() {
 	// Recover lamp light
 	blockLamp = false;
+	lightOn = false;
 	lampLight->SetIntensity(MIN_LIGHT_INTENSITY);
+	lampLight->SetAttenuationRadius(MIN_ATTENUATION_RADIUS);
 	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
 }
 
 void APlayerCharacter::SetLightIntensityFactor(float intensityFactor) {
 	lampLight->SetIntensity(MIN_LIGHT_INTENSITY + (lightIntensity - MIN_LIGHT_INTENSITY) * intensityFactor);
+	lampLight->SetAttenuationRadius(MIN_ATTENUATION_RADIUS + (LIGHT_ATTENUATION_RADIUS - MIN_ATTENUATION_RADIUS) * intensityFactor);
 }
 
 void APlayerCharacter::ApplyCameraShake() {
@@ -604,13 +612,28 @@ void APlayerCharacter::enterSecureZone(bool enterArea)
 
 void APlayerCharacter::decreaseHealth(int damage)
 {
+	// Reduce life
 	health -= damage;
 
+	// Notify damage
+	OnPlayerDamaged.Broadcast(health);
+
+	// Check if player still has lives
 	if (health <= 0) {
 		// Player dies
 		camera->bUsePawnControlRotation = false;
 		TL_Dead->Play();
 		blockInput = true;
+	}
+	else if (blockLamp || lightOn) {
+		// Restore extinguished lamp when being damaged
+		blockLamp = false;
+
+		auto& timerManager{ GetWorldTimerManager() };
+		if (timerManager.IsTimerActive(extinguishedLightHandle))
+			timerManager.ClearTimer(extinguishedLightHandle);
+
+		igniteLamp();
 	}
 }
 

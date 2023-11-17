@@ -108,6 +108,8 @@ void AMausoleumDoor::Tick(float DeltaTime)
 
 void AMausoleumDoor::InteractDoor(UActorComponent* component) {
 	if (component == doorMesh || component == secondDoorMesh) {
+		bool emblemRequired{ false };
+
 		// Interacting with doors, check if emblems are placed
 		if (firstEmblemPlaced && secondEmblemPlaced) {
 			// Open door
@@ -115,17 +117,20 @@ void AMausoleumDoor::InteractDoor(UActorComponent* component) {
 			doorSound->Play();
 			Tags.Remove("Interactable");
 		}
-		else if (component == doorMesh) {
+		else if (component == doorMesh && not firstEmblemPlaced) {
 			// Try to place first emblem
-			if (emblemsCollected>0 && not firstEmblemPlaced) {
-				PlaceEmblem(true);
-			}
+			if (emblemsCollected > 0)	PlaceEmblem(true);
+			else						emblemRequired = true;
 		}
-		else if (component == secondDoorMesh) {
+		else if (component == secondDoorMesh && not secondEmblemPlaced) {
 			// Try to place second emblem
-			if (emblemsCollected>0 && not secondEmblemPlaced) {
-				PlaceEmblem(false);
-			}
+			if (emblemsCollected > 0)	PlaceEmblem(false);
+			else						emblemRequired = true;
+		}
+
+		// If tried to place an emblem but did not have any, notify
+		if (emblemRequired) {
+			OnEmblemRequired.Broadcast();
 		}
 	}
 }

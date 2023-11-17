@@ -25,7 +25,7 @@ void AGhost_AIController::Tick(float DeltaTime)
 		if (IsInsideRadius) {
 			if (timerAnger >= MAX_TIMER_ANGER) {
 				if (lampState) {
-					angerLevelBB += MAX_TIMER_ANGER/10;
+					angerLevelBB += MAX_TIMER_ANGER/100;
 					angerLevel = (angerLevelBB = FMath::Min(angerLevelBB, 1.f));
 
 				}
