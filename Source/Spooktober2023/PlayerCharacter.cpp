@@ -5,6 +5,7 @@
 #include "Camera/CameraComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/TimelineComponent.h"
@@ -31,8 +32,8 @@
 #include "Shovel.h"
 
 
-constexpr auto MAX_HEALTH = 3;
-
+constexpr auto MAX_HEALTH				= 3;
+constexpr auto CHARM_COOLDOWN_TIME		= 40.f;
 constexpr auto LIGHT_INTENSITY			= 5000.f;
 constexpr auto MIN_LIGHT_INTENSITY		= 500.f;
 constexpr auto LIGHT_ATTENUATION_RADIUS = 4000.f;
@@ -105,6 +106,13 @@ APlayerCharacter::APlayerCharacter()
 	//niagaraComp->SetNiagaraVariableFloat(FString("Size"), fireSize);
 	niagaraComp->SetupAttachment(lampMesh);
 	niagaraComp->SetRelativeLocation(FVector(0.f, -0.9f, 9.f));
+
+	// Charm mesh
+	charmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Charm Mesh"));
+	charmMesh->SetupAttachment(GetCapsuleComponent());
+	charmMesh->SetRelativeLocation(FVector(25.f, 18.f, 50.f));
+	charmMesh->SetRelativeRotation(FRotator(-3.5f, 110.f, -9.7f));
+
 	// Audio components
 	stepsSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Steps Sound"));
 	stepsSound->SetupAttachment(GetRootComponent());
@@ -125,6 +133,9 @@ APlayerCharacter::APlayerCharacter()
 
 	//Dead timeline
 	TL_Dead = CreateDefaultSubobject<UTimelineComponent>(TEXT("Player Dead Animation"));
+
+	// Charm timeline
+	TL_FocusCharm = CreateDefaultSubobject<UTimelineComponent>(TEXT("Focus Charm Animation"));
 }
 
 // Called when the game starts or when spawned
@@ -144,6 +155,8 @@ void APlayerCharacter::BeginPlay()
 	// Initial light state
 	lampLight->SetIntensity(lightOn ? lightIntensity : MIN_LIGHT_INTENSITY);
 	lampLight->SetAttenuationRadius(lightOn ? LIGHT_ATTENUATION_RADIUS : MIN_ATTENUATION_RADIUS);
+
+	charmMesh->SetVisibility(false);
 
 	// Limit camera pitch
 	auto cameraManager{ GetWorld()->GetFirstPlayerController()->PlayerCameraManager };
@@ -168,10 +181,19 @@ void APlayerCharacter::BeginPlay()
 	FOnTimelineVector vcallback;
 	vcallback.BindUFunction(this, FName{ TEXT("setDeadAnimation") });
 	TL_Dead->AddInterpVector(DeadAnimationCurve, vcallback);
+	
+	fcallback.Unbind();
+	fcallback.BindUFunction(this, FName{ TEXT("UpdateRotationWhileFocusCharm") });
+	TL_FocusCharm->AddInterpFloat(FocusCharmCurve, fcallback);
 
-	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
-	stamina = MAX_STAMINA;
-	uiWidgetActive = false;
+	// Bind timeline finish functions
+	FOnTimelineEventStatic finishCallback;
+	finishCallback.BindUFunction(this, FName{ TEXT("endDeadAnimation") });
+	TL_Dead->SetTimelineFinishedFunc(finishCallback);
+
+	finishCallback.Unbind();
+	finishCallback.BindUFunction(this, FName{ TEXT("EndCharmEffect") });
+	TL_FocusCharm->SetTimelineFinishedFunc(finishCallback);
 
 	// Initial papers
 	collectedPapers.Empty();
@@ -179,13 +201,15 @@ void APlayerCharacter::BeginPlay()
 		AddPaperOrdered(initialPapers[i]);
 	}
 
-	//Initialize player health
+	// Set player initial speed
+	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
+	stamina = MAX_STAMINA;
+
+	// Initialize player health and other variables
 	health = MAX_HEALTH;
 	goalCompleted = false;
-
-	FOnTimelineEventStatic finishCallback;
-	finishCallback.BindUFunction(this, FName{ TEXT("endDeadAnimation") });
-	TL_Dead->SetTimelineFinishedFunc(finishCallback);
+	uiWidgetActive = false;
+	charmCooldown = 999.f;
 }
 
 void APlayerCharacter::PostInitializeComponents()
@@ -202,6 +226,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	ApplyCameraShake();
 	UpdateStamina(DeltaTime);
+	UpdateCharm(DeltaTime);
 
 	if (GetVelocity().IsZero() && GetWorldTimerManager().IsTimerActive(stepsSoundHandle)) GetWorldTimerManager().ClearTimer(stepsSoundHandle);
 	else CheckFloorMaterial();
@@ -240,6 +265,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		// Back
 		if (BackAction) 
 			EnhancedInputComponent->BindAction(BackAction, ETriggerEvent::Triggered, this, &APlayerCharacter::ClosePaper);
+
+		// Charm
+		if (CharmAction)
+			EnhancedInputComponent->BindAction(CharmAction, ETriggerEvent::Triggered, this, &APlayerCharacter::RequestCharmEffect);
 	}
 
 }
@@ -418,6 +447,10 @@ void APlayerCharacter::UpdateStamina(float time) {
 	}
 }
 
+void APlayerCharacter::UpdateCharm(float time) {
+	if (charmCooldown > 0.f) charmCooldown -= time;
+}
+
 int32 APlayerCharacter::AddPaperOrdered(const PaperMessage& paper) {
 	for (int32 i{ 0 }; i < collectedPapers.Num(); ++i) {
 		if (paper.title.Compare(collectedPapers[i].title) < 0) {
@@ -509,6 +542,13 @@ void APlayerCharacter::Interact(const FInputActionValue& Value) {
 	else {
 		interactingWith = nullptr;
 	}
+}
+
+void APlayerCharacter::RequestCharmEffect(const FInputActionValue& Value = {}) {
+	// Check charm is not on cooldown and player is not using inventory
+	if (charmCooldown > 0.f || uiWidgetActive) return;
+
+	OnCharm.Broadcast();
 }
 
 void APlayerCharacter::StopInteract(const FInputActionValue& Value = {}) {
@@ -615,6 +655,12 @@ void APlayerCharacter::decreaseHealth(int damage)
 	// Reduce life
 	health -= damage;
 
+	// If was using charm, stop animation
+	if (TL_FocusCharm->IsPlaying()) {
+		TL_FocusCharm->Stop();
+		EndCharmEffect();
+	}
+
 	// Notify damage
 	OnPlayerDamaged.Broadcast(health);
 
@@ -641,6 +687,41 @@ void APlayerCharacter::endDeadAnimation()
 {
 	camera->bUsePawnControlRotation = true;
 	OnEndDeadAnimation.Broadcast();
+}
+
+void APlayerCharacter::UseCharm(bool objectiveFound, FVector location) {
+	// Check can use charm
+	if (charmCooldown > 0.f || uiWidgetActive || not objectiveFound) return;
+
+	// Calculate objetive rotation
+	objectiveRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), location);
+
+	// Block input and play animation
+	blockInput = true;
+	TL_FocusCharm->PlayFromStart();
+	charmMesh->SetVisibility(true);
+
+	// Starts cooldown
+	charmCooldown = CHARM_COOLDOWN_TIME;
+}
+
+void APlayerCharacter::EndCharmEffect() {
+	// Enable input again
+	blockInput = false;
+	charmMesh->SetVisibility(false);
+}
+
+void APlayerCharacter::ResetCharmCooldown() {
+	charmCooldown = 0.f;
+}
+
+void APlayerCharacter::UpdateRotationWhileFocusCharm(float factor) {
+	factor = FMath::Clamp(factor, 0.f, 1.f);
+
+	// Interpolate rotation
+	FRotator newRotation{ FMath::Lerp(GetActorRotation(), objectiveRotation, factor)};
+	
+	GetController()->SetControlRotation(newRotation);
 }
 
 void APlayerCharacter::exitToMenu()

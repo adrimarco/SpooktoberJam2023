@@ -51,6 +51,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerDeadDelegate);
 UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerEndDeadDelegate);
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCharmDelegate);
+
 UCLASS()
 class SPOOKTOBER2023_API APlayerCharacter : public ACharacter
 {
@@ -68,9 +71,11 @@ public:
 	void StartSprint(const FInputActionValue& Value);
 	void StopSprint(const FInputActionValue& Value);
 	void Interact(const FInputActionValue& Value);
+	void RequestCharmEffect(const FInputActionValue& Value);
 	void StopInteract(const FInputActionValue& Value);
 	void OpenCoffin(const ACoffin& coffin);
 	void UpdateStamina(float time);
+	void UpdateCharm(float time);
 	void PlayStepsSound();
 	void UpdateStepsSound();
 	void CheckFloorMaterial();
@@ -126,6 +131,17 @@ public:
 	void decreaseHealth(int damage);
 	void endDeadAnimation();
 
+	UFUNCTION(BlueprintCallable)
+	void UseCharm(bool objectiveFound, FVector location);
+
+	UFUNCTION(BlueprintCallable)
+	void EndCharmEffect();
+
+	UFUNCTION(BlueprintCallable)
+	void ResetCharmCooldown();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateRotationWhileFocusCharm(float factor);
 
 	UFUNCTION(BlueprintCallable)
 	void exitToMenu();
@@ -153,6 +169,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 	int health{};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charm")
+	float charmCooldown{};
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Charm")
+	FRotator objectiveRotation{};
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Lamp")
 	bool lightOn{ false };
@@ -218,6 +240,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Components")
 	UStaticMeshComponent* lampMesh{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UStaticMeshComponent* charmMesh{ nullptr };
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UCameraComponent* camera{ nullptr };
 
@@ -237,6 +262,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UTimelineComponent* TL_Dead{ nullptr };
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
+	UTimelineComponent* TL_FocusCharm{ nullptr };
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
 	UAudioComponent* stepsSound{ nullptr };
@@ -269,12 +297,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* BackAction{ nullptr };
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* CharmAction{ nullptr };
+
 	// Timeline curve
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveFloat* LightIntensityCurve{ nullptr };
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
 	UCurveVector* DeadAnimationCurve{ nullptr };
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Timeline")
+	UCurveFloat* FocusCharmCurve{ nullptr };
 
 	// Camera shake
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
@@ -311,6 +345,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FPlayerDamagedDelegate OnPlayerDamaged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FCharmDelegate OnCharm;
 
 	
 
