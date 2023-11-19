@@ -46,8 +46,8 @@ constexpr auto RUN_SPEED				= 800.f;
 constexpr auto INTERACTION_DISTANCE		= 300.f;
 constexpr auto INTERACTING_CAMERA_SLOW	= 0.15f;
 constexpr auto INTERACTING_CAM_MOV_LIMIT= 0.4f;
-constexpr auto CHARM_FINAL_Z			= 50.f;
-constexpr auto CHARM_INIT_Z				= 30.f;
+const FVector CHARM_INIT_LOCATION		= FVector{35.f, 20.f, -32.f};
+const FVector CHARM_FINAL_LOCATION		= FVector{13.f, 0.f, 0.f};
 TArray<PaperMessage> initialPapers = {	{FText::FromString("So, are you determined to go to the cemetery? Is that the only thing you can think of? I don't intend to judge you; everyone does what they can to move forward. I'll just offer you a piece of advice. Meddling in the affairs of the dead can be dangerous. Disturbing troubled, malevolent, or unhappy souls comes with its risks. You should think carefully about whom you're looting, although it's impossible to do so without knowing who they were. I wish you the best of luck; you're going to need it."), 
 										"Rest in peace?"},
 										{FText::FromString("I don't know what reasons you have for venturing into the forest of the dead on the night before All Saints' Day, but I don't believe it's a sensible idea. I must warn you in case you're not aware of what you're about to do. They say that on October 31st, in the dead of night, the sky turns red, the souls of the departed wander our world once again, and their secrets come to light. I suppose you may not believe in such nonsense, but I'd carry a lantern. Some claim it can protect you from the spirits, although others insist just the opposite."),
@@ -111,9 +111,9 @@ APlayerCharacter::APlayerCharacter()
 
 	// Charm mesh
 	charmMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Charm Mesh"));
-	charmMesh->SetupAttachment(GetCapsuleComponent());
-	charmMesh->SetRelativeLocation(FVector(25.f, 12.f, 50.f));
-	charmMesh->SetRelativeRotation(FRotator(-3.5f, 110.f, -9.7f));
+	charmMesh->SetupAttachment(camera);
+	charmMesh->SetRelativeLocation(CHARM_INIT_LOCATION);
+	charmMesh->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
 
 	// Audio components
 	stepsSound = CreateDefaultSubobject<UAudioComponent>(TEXT("Steps Sound"));
@@ -764,8 +764,9 @@ void APlayerCharacter::SetCharmMeshPosition(float factor) {
 	}
 
 	// Update position
-	auto location{ charmMesh->GetRelativeLocation() };
-	location.Z = FMath::Lerp(CHARM_INIT_Z, CHARM_FINAL_Z, FMath::Clamp(factor, 0.f, 1.f));
+	//auto location{ charmMesh->GetRelativeLocation() };
+	//location.Z = FMath::Lerp(CHARM_INIT_Z, CHARM_FINAL_Z, FMath::Clamp(factor, 0.f, 1.f));
+	auto location{ FMath::Lerp(CHARM_INIT_LOCATION, CHARM_FINAL_LOCATION, FMath::Clamp(factor, 0.f, 1.f)) };
 
 	charmMesh->SetRelativeLocation(location);
 
