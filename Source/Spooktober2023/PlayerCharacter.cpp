@@ -429,15 +429,23 @@ bool APlayerCharacter::getLampState() const noexcept
 void APlayerCharacter::StartSprint(const FInputActionValue& Value = {}) {
 	if (exhausted || running) return;
 
+	// Player starts running, increasing maximum speed
 	running = true;
 	GetCharacterMovement()->MaxWalkSpeed = RUN_SPEED;
+
+	// Notify running state
+	OnRunningStateChanged.Broadcast(true);
 
 	UpdateStepsSound();
 }
 
 void APlayerCharacter::StopSprint(const FInputActionValue& Value = {}) {
+	// Player stops running, reducing maximum speed
 	running = false;
 	GetCharacterMovement()->MaxWalkSpeed = WALK_SPEED;
+
+	// Notify running state
+	OnRunningStateChanged.Broadcast(false);
 
 	UpdateStepsSound();
 }
@@ -675,6 +683,10 @@ void APlayerCharacter::EmblemCollected(int id) {
 
 TArray<int> APlayerCharacter::GetCollectedEmblems() {
 	return collectedEmblems;
+}
+
+float APlayerCharacter::GetStaminaPercentage() const {
+	return stamina/MAX_STAMINA;
 }
 
 void APlayerCharacter::StopDigging() {

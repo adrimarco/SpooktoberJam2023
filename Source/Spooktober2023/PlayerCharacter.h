@@ -46,6 +46,9 @@ UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FGraveAreaEnteredDelegate, AGrave*, graveActor);
 
 UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRunningStateChangedDelegate, bool, isRunning);
+
+UDELEGATE()
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPlayerDeadDelegate);
 
 UDELEGATE()
@@ -121,6 +124,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	TArray<int> GetCollectedEmblems();
+
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetStaminaPercentage() const;
 
 	UFUNCTION(BlueprintCallable)
 	void StopDigging();
@@ -363,6 +369,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
 	FCharmDelegate OnCharm;
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FRunningStateChangedDelegate OnRunningStateChanged;
 
 	
 
