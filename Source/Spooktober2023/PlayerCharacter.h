@@ -143,6 +143,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void UseCharm(bool objectiveFound, FVector location);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float CharmChargePercent() const;
+
 	UFUNCTION(BlueprintCallable)
 	void EndCharmEffect();
 

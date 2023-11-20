@@ -759,6 +759,10 @@ void APlayerCharacter::UseCharm(bool objectiveFound, FVector location) {
 	charmCooldown = CHARM_COOLDOWN_TIME;
 }
 
+float APlayerCharacter::CharmChargePercent() const {
+	return charmCooldown/CHARM_COOLDOWN_TIME;
+}
+
 void APlayerCharacter::EndCharmEffect() {
 	// Enable input again
 	blockInput = false;
