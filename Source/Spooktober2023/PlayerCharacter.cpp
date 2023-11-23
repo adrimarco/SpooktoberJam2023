@@ -33,7 +33,7 @@
 
 
 constexpr auto MAX_HEALTH				= 3;
-constexpr auto CHARM_COOLDOWN_TIME		= 40.f;
+constexpr auto CHARM_COOLDOWN_TIME		= 80.f;
 constexpr auto LIGHT_INTENSITY			= 5000.f;
 constexpr auto MIN_LIGHT_INTENSITY		= 500.f;
 constexpr auto LIGHT_ATTENUATION_RADIUS = 4000.f;
@@ -292,6 +292,8 @@ void APlayerCharacter::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedCo
 		if (lightOn) {
 			AAIController* aiCont = Cast<AAIController>(mons->GetController());
 			aiCont->GetBlackboardComponent()->SetValueAsBool("attackSuccess", true);
+
+			mons->OnTouchLight.Broadcast();
 		}
 	}
 }

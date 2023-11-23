@@ -13,6 +13,9 @@ class USpotLightComponent;
 class UAudioComponent;
 class UBoxComponent;
 
+UDELEGATE()
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FTouchLightDelegate);
+
 UCLASS()
 class SPOOKTOBER2023_API AMonster : public ACharacter, public ICombat_Interface
 {
@@ -53,6 +56,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision", meta = (AllowPrivateAccess = "true"))
 	UBoxComponent* attackCollider{};
+
+	UPROPERTY(BlueprintAssignable, Category = "Dispatcher")
+	FTouchLightDelegate OnTouchLight;
 
 	UFUNCTION()
 	void activateAttackCollision(bool activate);

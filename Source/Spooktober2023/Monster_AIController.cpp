@@ -26,7 +26,7 @@ void AMonster_AIController::Tick(float DeltaTime)
 	if (attackS && not insideSecureArea) {
 		if (timerResetFlee > Max_timerResetFlee) {
 			GetBlackboardComponent()->SetValueAsBool("attackSuccess", false);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow, TEXT("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"));
+			
 			timerResetFlee -= DeltaTime;
 		}
 		timerResetFlee += DeltaTime;
