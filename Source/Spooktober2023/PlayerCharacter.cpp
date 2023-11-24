@@ -34,10 +34,12 @@
 
 constexpr auto MAX_HEALTH				= 3;
 constexpr auto CHARM_COOLDOWN_TIME		= 80.f;
-constexpr auto LIGHT_INTENSITY			= 5000.f;
-constexpr auto MIN_LIGHT_INTENSITY		= 500.f;
-constexpr auto LIGHT_ATTENUATION_RADIUS = 4000.f;
-constexpr auto MIN_ATTENUATION_RADIUS	= 2000.f;
+constexpr auto LIGHT_INTENSITY			= 5.f;
+constexpr auto MIN_LIGHT_INTENSITY		= 3.f;
+constexpr auto EXTING_LIGHT_INTENSITY	= 1.f;
+constexpr auto LIGHT_ATTENUATION_RADIUS = 2000.f;
+constexpr auto MIN_ATTENUATION_RADIUS	= 900.f;
+constexpr auto EXTING_ATTENUATION_RADIUS= 400.f;
 constexpr auto MAX_STAMINA				= 10.f;
 constexpr auto MIN_RUN_STAMINA			= 5.f;
 constexpr auto STAMINA_RECOVER_RATE		= 0.8f;
@@ -48,6 +50,8 @@ constexpr auto INTERACTING_CAMERA_SLOW	= 0.15f;
 constexpr auto INTERACTING_CAM_MOV_LIMIT= 0.4f;
 const FVector CHARM_INIT_LOCATION		= FVector{35.f, 20.f, -32.f};
 const FVector CHARM_FINAL_LOCATION		= FVector{13.f, 0.f, 0.f};
+const FLinearColor LIGHT_COLOR			= FLinearColor(1.f, 0.173f, 0.f);
+const FLinearColor EXTING_LIGHT_COLOR	= FLinearColor(0.8f, 0.8f, 0.8f);
 TArray<PaperMessage> initialPapers = {	{FText::FromString("So, are you determined to go to the cemetery? Is that the only thing you can think of? I don't intend to judge you; everyone does what they can to move forward. I'll just offer you a piece of advice. Meddling in the affairs of the dead can be dangerous. Disturbing troubled, malevolent, or unhappy souls comes with its risks. You should think carefully about whom you're looting, although it's impossible to do so without knowing who they were. I wish you the best of luck; you're going to need it."), 
 										"Rest in peace?"},
 										{FText::FromString("I don't know what reasons you have for venturing into the forest of the dead on the night before All Saints' Day, but I don't believe it's a sensible idea. I must warn you in case you're not aware of what you're about to do. They say that on October 31st, in the dead of night, the sky turns red, the souls of the departed wander our world once again, and their secrets come to light. I suppose you may not believe in such nonsense, but I'd carry a lantern. Some claim it can protect you from the spirits, although others insist just the opposite."),
@@ -86,7 +90,7 @@ APlayerCharacter::APlayerCharacter()
 	//NavMesh modifier collision
 	navmeshModifier = CreateDefaultSubobject<USphereComponent>(TEXT("Navigation Modifier"));
 	navmeshModifier->SetupAttachment(GetCapsuleComponent());
-	navmeshModifier->SetSphereRadius(200.f);
+	navmeshModifier->SetSphereRadius(550.f);
 	navmeshModifier->Deactivate();
 	
 	// Lamp mesh
@@ -96,11 +100,12 @@ APlayerCharacter::APlayerCharacter()
 	lampMesh->SetRelativeRotation(FRotator(-3.5f, 70.f, -9.7f));
 
 	// Lamp light
+	lightIntensity = LIGHT_INTENSITY;
 	lampLight = CreateDefaultSubobject<UPointLightComponent>(TEXT("Lamp Point Light"));
 	lampLight->SetupAttachment(lampMesh);
 	lampLight->SetAttenuationRadius(LIGHT_ATTENUATION_RADIUS);
-	lightIntensity = LIGHT_INTENSITY;
-	lampLight->SetLightColor(FLinearColor(1.f, 0.173f, 0.f));
+	lampLight->bUseInverseSquaredFalloff = false;
+	lampLight->SetLightColor(LIGHT_COLOR);
 	lampLight->SetRelativeLocation(FVector(0.f, -1.17f, 10.f));
 
 	//Lamp particle
@@ -155,6 +160,7 @@ void APlayerCharacter::BeginPlay()
 	}
 
 	// Initial light state
+	lightIntensity = LIGHT_INTENSITY;
 	lampLight->SetIntensity(lightOn ? lightIntensity : MIN_LIGHT_INTENSITY);
 	lampLight->SetAttenuationRadius(lightOn ? LIGHT_ATTENUATION_RADIUS : MIN_ATTENUATION_RADIUS);
 
@@ -374,7 +380,11 @@ void APlayerCharacter::extinguishLamp(float time)
 
 	if (TL_TurnLighOn->IsPlaying()) TL_TurnLighOn->Stop();
 	TL_TurnLighOn->SetPlaybackPosition(0.f, false);
-	lampLight->SetIntensity(0.f);
+
+	// Modify light properties
+	lampLight->SetIntensity(EXTING_LIGHT_INTENSITY);
+	lampLight->SetAttenuationRadius(EXTING_ATTENUATION_RADIUS);
+	lampLight->SetLightColor(EXTING_LIGHT_COLOR);
 
 	// Play sound
 	lampSound->SetBoolParameter("TurnOn", false);
@@ -399,9 +409,12 @@ void APlayerCharacter::igniteLamp() {
 	// Recover lamp light
 	blockLamp = false;
 	lightOn = false;
+	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
+
+	// Modify light properties
 	lampLight->SetIntensity(MIN_LIGHT_INTENSITY);
 	lampLight->SetAttenuationRadius(MIN_ATTENUATION_RADIUS);
-	niagaraComp->SetNiagaraVariableFloat(FString("Size"), 0.1);
+	lampLight->SetLightColor(LIGHT_COLOR);
 }
 
 void APlayerCharacter::SetLightIntensityFactor(float intensityFactor) {
